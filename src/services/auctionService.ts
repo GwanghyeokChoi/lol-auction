@@ -49,9 +49,6 @@ export const AuctionService = {
                 // 첫 번째 유찰자를 다음 타자로 지정
                 nextId = passedPlayers[0];
             } else {
-                // 유찰자도 없으면 정말 끝 (하지만 팀이 다 안 찼는데 선수가 없는 경우 -> 인원 부족)
-                // startAuctionProcess에서 인원 체크를 했으므로 이 경우는 거의 없어야 함.
-                // 예외적으로 발생한다면 종료 처리.
                 await update(ref(db, `rooms/${roomId}/live`), { status: 'idle' });
                 return alert("더 이상 경매할 선수가 없습니다. (팀 미완성)");
             }
@@ -99,7 +96,7 @@ export const AuctionService = {
         const live = data.live;
         const currentBid = live.highestBid || 0;
 
-        // 중복 입찰 방지 (내가 이미 최고 입찰자면 입찰 불가)
+        // 중복 입찰 방지
         if (live.highestBidderId === teamId && nextBid >= currentBid) {
             return alert("이미 최고 입찰자입니다. 연속으로 입찰할 수 없습니다.");
         }
@@ -108,7 +105,6 @@ export const AuctionService = {
         if (data.teams[teamId].members?.length >= 4) return alert("팀원이 가득 찼습니다 (최대 5인).");
         if (nextBid < 0) return alert("0 포인트 미만으로 입찰할 수 없습니다.");
         
-        // 현재가보다 낮게 입찰하는 경우 (정정)
         if (nextBid < currentBid) {
             if (live.highestBidderId !== teamId) {
                 return alert(`현재 최고가(${currentBid}P)보다 높게 입찰해야 합니다.`);
@@ -119,13 +115,13 @@ export const AuctionService = {
 
         if (data.teams[teamId].points < nextBid) return alert("포인트가 부족합니다.");
 
-        // 입찰 반영 및 타이머 리셋 (10초)
+        // 입찰 반영 및 타이머 리셋 (15초로 변경)
         const updates: any = {};
         updates[`rooms/${roomId}/live/highestBid`] = nextBid;
         updates[`rooms/${roomId}/live/highestBidderId`] = teamId;
-        updates[`rooms/${roomId}/live/endTime`] = Date.now() + 10000;
+        updates[`rooms/${roomId}/live/endTime`] = Date.now() + 15000;
 
-        // 로그 기록 (최종 금액 강조)
+        // 로그 기록
         const logKey = push(ref(db, `rooms/${roomId}/logs`)).key;
         const actionText = nextBid < currentBid ? "정정" : "입찰";
         updates[`rooms/${roomId}/logs/${logKey}`] = {
@@ -150,9 +146,9 @@ export const AuctionService = {
         
         const updates: any = {};
         updates[`rooms/${roomId}/live/status`] = 'paused';
-        updates[`rooms/${roomId}/live/remainingAuctionTime`] = remainingAuctionTime; // 경매 남은 시간 저장
-        updates[`rooms/${roomId}/live/pauseLimitTime`] = Date.now() + 120000; // 퍼즈 종료 예정 시간 (2분 후)
-        updates[`rooms/${roomId}/live/pausedBy`] = teamId; // 퍼즈 건 사람
+        updates[`rooms/${roomId}/live/remainingAuctionTime`] = remainingAuctionTime; 
+        updates[`rooms/${roomId}/live/pauseLimitTime`] = Date.now() + 120000; 
+        updates[`rooms/${roomId}/live/pausedBy`] = teamId; 
         updates[`rooms/${roomId}/teams/${teamId}/pauseCount`] = team.pauseCount - 1;
 
         const logKey = push(ref(db, `rooms/${roomId}/logs`)).key;
@@ -164,31 +160,38 @@ export const AuctionService = {
         await update(ref(db), updates);
     },
 
-    // 경매 재개 (본인 또는 방장)
+    // 경매 재개 (5초 대기 후 시작)
     async resumeAuction(roomId: string, requestorId?: string) {
         const snap = await get(ref(db, `rooms/${roomId}/live`));
         const live = snap.val();
 
         if (live.status !== 'paused') return;
 
-        // 권한 체크 (방장 team_1은 무조건 가능, 그 외에는 본인이 건 퍼즈여야 함)
         if (requestorId && requestorId !== 'team_1' && live.pausedBy !== requestorId) {
             return alert("본인이 요청한 퍼즈만 해제할 수 있습니다.");
         }
 
         const updates: any = {};
-        updates[`rooms/${roomId}/live/status`] = 'bidding';
-        updates[`rooms/${roomId}/live/endTime`] = Date.now() + (live.remainingAuctionTime || 10000); // 저장된 시간만큼 연장
+        updates[`rooms/${roomId}/live/status`] = 'resuming'; // 재개 대기 상태
+        updates[`rooms/${roomId}/live/nextAuctionTime`] = Date.now() + 5000; // 5초 후 재개
         updates[`rooms/${roomId}/live/pausedBy`] = null;
         updates[`rooms/${roomId}/live/pauseLimitTime`] = null;
 
         const logKey = push(ref(db, `rooms/${roomId}/logs`)).key;
         updates[`rooms/${roomId}/logs/${logKey}`] = {
-            msg: `▶ 경매가 재개되었습니다.`,
+            msg: `▶ 퍼즈가 해제되었습니다. 5초 후 경매가 재개됩니다.`,
             timestamp: Date.now()
         };
 
         await update(ref(db), updates);
+    },
+
+    // 재개 대기 후 실제 경매 시작 (15초 부여)
+    async startBidding(roomId: string) {
+        await update(ref(db, `rooms/${roomId}/live`), {
+            status: 'bidding',
+            endTime: Date.now() + 15000 // 15초 리셋
+        });
     },
 
     // 낙찰 또는 유찰 처리
@@ -197,14 +200,12 @@ export const AuctionService = {
         const data = snap.val();
         const live = data.live;
         
-        // 이미 처리되었거나 쿨타임이면 중복 실행 방지
         if (live.status === 'cooldown') return;
 
         const updates: any = {};
         let resultMsg = "";
 
         if (live.highestBidderId) {
-            // 낙찰
             updates[`rooms/${roomId}/players/${live.activePlayerId}/status`] = 'sold';
             const winner = data.teams[live.highestBidderId];
             updates[`rooms/${roomId}/teams/${live.highestBidderId}/points`] = winner.points - live.highestBid;
@@ -214,21 +215,18 @@ export const AuctionService = {
             
             resultMsg = `🎉 <strong>${winner.leaderName}</strong>팀 낙찰! (<span class="amt">${live.highestBid}P</span>)`;
         } else {
-            // 유찰
             updates[`rooms/${roomId}/players/${live.activePlayerId}/status`] = 'passed';
             resultMsg = `❌ 유찰되었습니다.`;
         }
 
-        // 결과 로그
         const logKey = push(ref(db, `rooms/${roomId}/logs`)).key;
         updates[`rooms/${roomId}/logs/${logKey}`] = {
             msg: resultMsg,
             timestamp: Date.now()
         };
 
-        // 다음 단계 준비 (쿨타임)
         updates[`rooms/${roomId}/live/status`] = 'cooldown';
-        updates[`rooms/${roomId}/live/nextAuctionTime`] = Date.now() + 5000; // 5초 대기
+        updates[`rooms/${roomId}/live/nextAuctionTime`] = Date.now() + 5000;
         await update(ref(db), updates);
     }
 };

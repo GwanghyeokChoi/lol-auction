@@ -15,11 +15,11 @@ export interface Team {
     points: number;
     members: string[];
     pauseCount: number;
-    online?: boolean; // 접속 상태 추가
+    online?: boolean;
 }
 
 export interface AuctionState {
-    status: 'idle' | 'bidding' | 'paused' | 'cooldown';
+    status: 'idle' | 'bidding' | 'paused' | 'cooldown' | 'resuming'; // resuming 추가
     activePlayerId: string | null;
     highestBid: number;
     highestBidderId: string | null;
