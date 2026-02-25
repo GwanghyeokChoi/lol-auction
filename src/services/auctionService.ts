@@ -7,19 +7,66 @@ export const AuctionService = {
         const snap = await get(ref(db, `rooms/${roomId}`));
         const data = snap.val();
         const live: AuctionState = data.live;
+        const teams = data.teams;
 
-        // 대기 중인 다음 선수 찾기
-        const nextId = live.playerOrder.find(id => data.players[id].status === 'waiting');
-        if (!nextId) return alert("모든 경매가 종료되었습니다.");
+        // 1. 모든 팀이 꽉 찼는지 확인 (팀당 4명)
+        const allTeamsFull = Object.values(teams).every((t: any) => (t.members?.length || 0) >= 4);
+        if (allTeamsFull) {
+            await update(ref(db, `rooms/${roomId}/live`), { status: 'idle' });
+            
+            const logKey = push(ref(db, `rooms/${roomId}/logs`)).key;
+            await update(ref(db, `rooms/${roomId}/logs/${logKey}`), {
+                msg: `🎉 <strong>모든 팀 구성이 완료되었습니다! 경매를 종료합니다.</strong>`,
+                timestamp: Date.now()
+            });
+            
+            return alert("모든 팀 구성이 완료되어 경매가 종료되었습니다!");
+        }
 
-        await update(ref(db, `rooms/${roomId}/live`), {
-            status: 'bidding',
-            activePlayerId: nextId,
-            highestBid: 0,
-            highestBidderId: null,
-            endTime: Date.now() + 15000 // 기본 15초 제공
-        });
-        await update(ref(db, `rooms/${roomId}/players/${nextId}`), { status: 'bidding' });
+        // 2. 대기 중인 선수 찾기
+        let nextId = live.playerOrder.find(id => data.players[id].status === 'waiting');
+
+        // 3. 대기 선수가 없으면 유찰자 확인 및 재경매 준비
+        if (!nextId) {
+            const passedPlayers = live.playerOrder.filter(id => data.players[id].status === 'passed');
+            
+            if (passedPlayers.length > 0) {
+                // 유찰자들을 다시 waiting으로 변경
+                const updates: any = {};
+                passedPlayers.forEach(pid => {
+                    updates[`rooms/${roomId}/players/${pid}/status`] = 'waiting';
+                });
+                
+                // 로그 기록
+                const logKey = push(ref(db, `rooms/${roomId}/logs`)).key;
+                updates[`rooms/${roomId}/logs/${logKey}`] = {
+                    msg: `🔄 <strong>대기 선수가 없어 유찰된 선수들의 경매를 다시 시작합니다.</strong>`,
+                    timestamp: Date.now()
+                };
+
+                await update(ref(db), updates);
+                
+                // 첫 번째 유찰자를 다음 타자로 지정
+                nextId = passedPlayers[0];
+            } else {
+                // 유찰자도 없으면 정말 끝 (하지만 팀이 다 안 찼는데 선수가 없는 경우 -> 인원 부족)
+                // startAuctionProcess에서 인원 체크를 했으므로 이 경우는 거의 없어야 함.
+                // 예외적으로 발생한다면 종료 처리.
+                await update(ref(db, `rooms/${roomId}/live`), { status: 'idle' });
+                return alert("더 이상 경매할 선수가 없습니다. (팀 미완성)");
+            }
+        }
+
+        if (nextId) {
+            await update(ref(db, `rooms/${roomId}/live`), {
+                status: 'bidding',
+                activePlayerId: nextId,
+                highestBid: 0,
+                highestBidderId: null,
+                endTime: Date.now() + 15000 // 기본 15초 제공
+            });
+            await update(ref(db, `rooms/${roomId}/players/${nextId}`), { status: 'bidding' });
+        }
     },
 
     // 실시간 경쟁 입찰 (증감액 기준)
@@ -52,10 +99,24 @@ export const AuctionService = {
         const live = data.live;
         const currentBid = live.highestBid || 0;
 
+        // 중복 입찰 방지 (내가 이미 최고 입찰자면 입찰 불가)
+        if (live.highestBidderId === teamId && nextBid >= currentBid) {
+            return alert("이미 최고 입찰자입니다. 연속으로 입찰할 수 없습니다.");
+        }
+
         // 유효성 검사
         if (data.teams[teamId].members?.length >= 4) return alert("팀원이 가득 찼습니다 (최대 5인).");
         if (nextBid < 0) return alert("0 포인트 미만으로 입찰할 수 없습니다.");
-        if (nextBid <= currentBid) return alert(`현재 최고가(${currentBid}P)보다 높게 입찰해야 합니다.`);
+        
+        // 현재가보다 낮게 입찰하는 경우 (정정)
+        if (nextBid < currentBid) {
+            if (live.highestBidderId !== teamId) {
+                return alert(`현재 최고가(${currentBid}P)보다 높게 입찰해야 합니다.`);
+            }
+        } else if (nextBid <= currentBid && live.highestBidderId !== teamId) {
+             return alert(`현재 최고가(${currentBid}P)보다 높게 입찰해야 합니다.`);
+        }
+
         if (data.teams[teamId].points < nextBid) return alert("포인트가 부족합니다.");
 
         // 입찰 반영 및 타이머 리셋 (10초)
@@ -66,8 +127,9 @@ export const AuctionService = {
 
         // 로그 기록 (최종 금액 강조)
         const logKey = push(ref(db, `rooms/${roomId}/logs`)).key;
+        const actionText = nextBid < currentBid ? "정정" : "입찰";
         updates[`rooms/${roomId}/logs/${logKey}`] = {
-            msg: `<strong>${data.teams[teamId].leaderName}</strong>님이 <span class="amt" style="font-size:1.1em">${nextBid}P</span>에 입찰했습니다!`,
+            msg: `<strong>${data.teams[teamId].leaderName}</strong>님이 <span class="amt" style="font-size:1.1em">${nextBid}P</span>에 ${actionText}했습니다!`,
             timestamp: Date.now()
         };
 

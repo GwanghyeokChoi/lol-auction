@@ -1,4 +1,4 @@
-import { ref, set, update, get } from "firebase/database";
+import { ref, set, update, get, onDisconnect, onValue } from "firebase/database";
 import { db } from "../firebase";
 import { TimerUtils } from "../utils/timer";
 import type { Player } from "../types";
@@ -37,6 +37,12 @@ export const RoomService = {
 
         if (playerIds.length === 0) return alert("선수 명단(CSV)을 먼저 등록해주세요.");
 
+        // 최소 인원 체크 (팀당 4명 필요)
+        const requiredPlayers = leaderIds.length * 4;
+        if (playerIds.length < requiredPlayers) {
+            return alert(`선수가 부족합니다. 최소 ${requiredPlayers}명이 필요합니다. (현재 ${playerIds.length}명)`);
+        }
+
         await update(ref(db, `rooms/${roomId}/live`), {
             playerOrder: TimerUtils.shuffle(playerIds), // 선수 랜덤 순서
             leaderOrder: TimerUtils.shuffle(leaderIds), // 팀장 입찰 순서
@@ -51,6 +57,24 @@ export const RoomService = {
         await update(ref(db, `rooms/${roomId}/live`), {
             status: 'cooldown',
             nextAuctionTime: Date.now() + 3000 // 최초 시작은 3초 대기
+        });
+    },
+
+    // 4. 방 접속 상태 관리
+    connectToRoom(roomId: string, teamId: string) {
+        // viewer는 상태 관리 안 함 (필요하면 추가 가능)
+        if (teamId === 'viewer') return;
+
+        const connectedRef = ref(db, ".info/connected");
+        const myStatusRef = ref(db, `rooms/${roomId}/teams/${teamId}/online`);
+
+        onValue(connectedRef, (snap) => {
+            if (snap.val() === true) {
+                // 연결되면 online: true로 설정
+                set(myStatusRef, true);
+                // 연결 끊기면 online: false로 자동 변경 예약
+                onDisconnect(myStatusRef).set(false);
+            }
         });
     }
 };

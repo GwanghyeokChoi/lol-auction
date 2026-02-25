@@ -10,7 +10,7 @@ export const Renderer = {
         const listHtml = sortedIds.map(id => {
             const p = players[id];
             if (!p) return '';
-            return `<div class="player-card ${p.status}">
+            return `<div class="player-card ${p.status}" data-id="${p.id}">
                 <strong>${p.name}</strong> <small>${p.tier} (${p.mainPos})</small>
             </div>`;
         }).join('');
@@ -77,14 +77,16 @@ export const Renderer = {
         const el = document.getElementById('team-list');
         if (!el) return;
 
-        const html = Object.values(teams).map(t => `
-            <div class="team-card ${userRole === t.id ? 'active' : ''}">
-                <div class="t-header">${t.leaderName} ${userRole === t.id ? '(나)' : ''}</div>
+        const html = Object.values(teams).map(t => {
+            const onlineBadge = t.online ? '<span class="online-dot">●</span>' : '<span class="offline-dot">○</span>';
+            return `
+            <div class="team-card ${userRole === t.id ? 'active' : ''}" data-id="${t.id}">
+                <div class="t-header">${onlineBadge} ${t.leaderName} ${userRole === t.id ? '(나)' : ''}</div>
                 <div class="t-points">${t.points.toLocaleString()} P</div>
                 <div class="t-members">멤버: ${t.members?.length || 0} / 4</div>
                 <div class="t-pause">퍼즈 남음: ${t.pauseCount}회</div>
             </div>
-        `).join('');
+        `}).join('');
 
         el.innerHTML = `<div class="panel-header">TEAMS</div><div class="scroll-area">${html}</div>`;
     },

@@ -208,7 +208,7 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     padding: 10px;
     border-radius: 4px;
     border: 1px solid #30363d;
-    font-size: 16px;
+    font-size: 20px;
 }
 .turn-box strong { color: #c8aa6e; font-size: 20px; }
 
@@ -354,6 +354,9 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     color: #c8aa6e;
     z-index: 100;
 }
+
+.online-dot { color: #3fb950; margin-right: 5px; }
+.offline-dot { color: #555; margin-right: 5px; }
 
 @keyframes modalPop {
     from { opacity: 0; transform: scale(0.8) translateY(-20px); }

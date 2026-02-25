@@ -124,6 +124,11 @@ window.addEventListener('DOMContentLoaded', () => {
         setupScreen.style.display = 'none';
         auctionContainer.style.display = 'grid';
 
+        // 접속 상태 알림 시작 (팀장인 경우만)
+        if (userRole !== 'viewer') {
+            RoomService.connectToRoom(currentRoomId, userRole);
+        }
+
         // 관전자 모드 처리
         if (userRole === 'viewer') {
             const biddingControls = document.getElementById('bidding-controls');
@@ -152,19 +157,31 @@ window.addEventListener('DOMContentLoaded', () => {
             const adminZone = document.getElementById('admin-controls');
             const btnUpload = document.getElementById('btn-upload-csv');
             const btnStart = document.getElementById('btn-start-auction');
+            const btnDownload = document.getElementById('btn-download-result');
             const resumeBtn = document.getElementById('btn-resume-auction');
             const pauseBtn = document.getElementById('btn-pause');
 
             if (userRole === 'team_1' && adminZone) {
                 adminZone.style.display = 'block';
 
-                // 경매 시작 후 버튼 숨김 (idle 상태가 아니면 숨김)
-                if (data.live.status !== 'idle') {
+                // 모든 팀이 꽉 찼는지 확인
+                const allTeamsFull = Object.values(data.teams).every((t: any) => (t.members?.length || 0) >= 4);
+
+                if (allTeamsFull) {
+                    // 경매 종료 상태
                     if (btnUpload) btnUpload.style.display = 'none';
                     if (btnStart) btnStart.style.display = 'none';
+                    if (btnDownload) btnDownload.style.display = 'inline-block';
+                } else if (data.live.status !== 'idle') {
+                    // 경매 진행 중
+                    if (btnUpload) btnUpload.style.display = 'none';
+                    if (btnStart) btnStart.style.display = 'none';
+                    if (btnDownload) btnDownload.style.display = 'none';
                 } else {
+                    // 경매 대기 중
                     if (btnUpload) btnUpload.style.display = 'inline-block';
                     if (btnStart) btnStart.style.display = 'inline-block';
+                    if (btnDownload) btnDownload.style.display = 'none';
                 }
             }
 
@@ -276,6 +293,12 @@ window.addEventListener('DOMContentLoaded', () => {
         AuctionService.resumeAuction(currentRoomId!, userRole);
     });
 
+    // 결과 다운로드 버튼
+    document.getElementById('btn-download-result')?.addEventListener('click', () => {
+        if (!latestData) return;
+        CSVService.exportResults(latestData.teams, latestData.players);
+    });
+
     // CSV 업로드
     document.getElementById('btn-upload-csv')?.addEventListener('click', () => {
         document.getElementById('csv-upload')?.click();
@@ -291,6 +314,116 @@ window.addEventListener('DOMContentLoaded', () => {
             alert(`선수 ${Object.keys(players).length}명 등록 완료!`);
         } catch (err) {
             alert("CSV 파싱 실패");
+        }
+    });
+
+    // --- [모달 이벤트 핸들러] ---
+    document.getElementById('btn-close-team-modal')?.addEventListener('click', () => {
+        document.getElementById('team-detail-modal')!.style.display = 'none';
+    });
+    document.getElementById('btn-close-player-modal')?.addEventListener('click', () => {
+        document.getElementById('player-info-modal')!.style.display = 'none';
+    });
+
+    // 팀 리스트 클릭 위임
+    document.getElementById('team-list')?.addEventListener('click', (e) => {
+        const card = (e.target as HTMLElement).closest('.team-card');
+        if (!card || !latestData) return;
+        const teamId = card.getAttribute('data-id');
+        if (!teamId) return;
+
+        const team = latestData.teams[teamId];
+        const players = latestData.players;
+        const members = team.members || [];
+
+        const modal = document.getElementById('team-detail-modal');
+        const title = document.getElementById('team-modal-title');
+        const content = document.getElementById('team-modal-members');
+
+        if (modal && title && content) {
+            title.innerText = `${team.leaderName} 팀 정보`;
+            content.innerHTML = members.length > 0 
+                ? members.map((pid: string) => {
+                    const p = players[pid];
+                    return `<div class="player-card sold">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong>${p.name}</strong> 
+                            <small style="background:#333; padding:2px 6px; border-radius:4px;">${p.tier}</small>
+                        </div>
+                        <div style="font-size:12px; color:#aaa; margin-top:6px; line-height:1.4;">
+                            <div>포지션: ${p.mainPos} ${p.subPos ? `/ ${p.subPos}` : ''}</div>
+                            <div>Most: ${p.most ? p.most.join(', ') : '-'}</div>
+                        </div>
+                    </div>`;
+                }).join('')
+                : '<p style="text-align:center; color:#888;">아직 낙찰된 선수가 없습니다.</p>';
+            
+            modal.style.display = 'flex';
+        }
+    });
+
+    // 선수 리스트 클릭 위임
+    document.getElementById('player-list')?.addEventListener('click', (e) => {
+        const card = (e.target as HTMLElement).closest('.player-card');
+        if (!card || !latestData) return;
+        const playerId = card.getAttribute('data-id');
+        if (!playerId) return;
+
+        const p = latestData.players[playerId];
+        const isStarted = latestData.live.status !== 'idle';
+
+        const modal = document.getElementById('player-info-modal');
+        const name = document.getElementById('player-modal-name');
+        const detail = document.getElementById('player-modal-detail');
+
+        if (modal && name && detail) {
+            name.innerText = `${p.name} (${p.nickname})`;
+            
+            // 상태 메시지 생성
+            let statusText = '';
+            let statusColor = '#fff';
+
+            if (p.status === 'sold') {
+                const teams = latestData.teams;
+                let soldTeamName = '알 수 없음';
+                for (const tid in teams) {
+                    if (teams[tid].members && teams[tid].members.includes(playerId)) {
+                        soldTeamName = teams[tid].leaderName;
+                        break;
+                    }
+                }
+                statusText = `낙찰됨 - ${soldTeamName} 팀`;
+                statusColor = '#c8aa6e';
+            } else if (p.status === 'passed') {
+                statusText = '유찰됨';
+                statusColor = '#ff4655';
+            } else if (p.status === 'bidding') {
+                statusText = '현재 경매 진행 중 🔥';
+                statusColor = '#00bcff';
+            } else {
+                statusText = '경매 대기 중';
+                statusColor = '#888';
+            }
+
+            let infoHtml = `
+                <div style="margin-bottom:15px; text-align:center; font-size:16px; font-weight:bold; color:${statusColor}; border:1px solid ${statusColor}; padding:8px; border-radius:4px;">
+                    ${statusText}
+                </div>
+                <div style="margin-bottom:10px;"><strong>티어:</strong> ${p.tier}</div>
+                <div style="margin-bottom:10px;"><strong>주 포지션:</strong> ${p.mainPos}</div>
+            `;
+
+            if (isStarted) {
+                infoHtml += `
+                    <div style="margin-bottom:10px;"><strong>부 포지션:</strong> ${p.subPos}</div>
+                    <div><strong>Most:</strong> ${p.most.join(', ')}</div>
+                `;
+            } else {
+                infoHtml += `<div style="color:#888; margin-top:20px; text-align:center;">🔒 경매가 시작되면 상세 정보가 공개됩니다.</div>`;
+            }
+
+            detail.innerHTML = infoHtml;
+            modal.style.display = 'flex';
         }
     });
 });

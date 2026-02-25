@@ -15,6 +15,7 @@ export interface Team {
     points: number;
     members: string[];
     pauseCount: number;
+    online?: boolean; // 접속 상태 추가
 }
 
 export interface AuctionState {
@@ -29,4 +30,7 @@ export interface AuctionState {
     pauseEndTime?: number;
     nextAuctionTime: number;
     initialPoints: number;
+    remainingAuctionTime?: number;
+    pauseLimitTime?: number;
+    pausedBy?: string | null;
 }
