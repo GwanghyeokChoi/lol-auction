@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/lol-auction/', // GitHub Pages 리포지토리 이름
+  base: '/', // 커스텀 도메인 사용 시 루트 경로
   build: {
     outDir: 'dist',
   }
