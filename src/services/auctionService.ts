@@ -167,8 +167,10 @@ export const AuctionService = {
 
         if (live.status !== 'paused') return;
 
-        if (requestorId && requestorId !== 'team_1' && live.pausedBy !== requestorId) {
-            return alert("본인이 요청한 퍼즈만 해제할 수 있습니다.");
+        // 권한 체크: requestorId가 있으면(사용자 요청), 반드시 pausedBy와 일치해야 함.
+        // requestorId가 없으면(시스템 강제 해제) 통과.
+        if (requestorId && live.pausedBy !== requestorId) {
+            return alert("퍼즈를 건 당사자만 해제할 수 있습니다.");
         }
 
         const updates: any = {};
