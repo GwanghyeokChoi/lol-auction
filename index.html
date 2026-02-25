@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LOL Auction</title>
+</head>
+<body>
+<div id="app">
+  <!-- 1. 설정 화면 (방 생성) -->
+  <div id="setup-screen" class="overlay">
+    <div class="modal" id="modal-step-1">
+      <h1>AUCTION SETUP</h1>
+      <div class="setup-notice">
+        <p>💡 첫 번째 칸에 입력된 팀장이 <strong>방장 권한</strong>을 가집니다.</p>
+      </div>
+      <div class="input-group">
+        <label>팀장 목록 및 초기 포인트</label>
+        <div id="leader-input-list" class="scroll-input-area">
+          <div class="leader-row" data-index="1">
+            <input type="text" class="leader-name-input" placeholder="팀장 1 이름 (방장)">
+            <input type="number" class="leader-point-input" value="1000" placeholder="Point">
+          </div>
+          <div class="leader-row" data-index="2">
+            <input type="text" class="leader-name-input" placeholder="팀장 2 이름">
+            <input type="number" class="leader-point-input" value="1000" placeholder="Point">
+          </div>
+        </div>
+        <button type="button" id="btn-add-leader" class="btn-secondary">+ 팀장 추가</button>
+      </div>
+      <button id="btn-generate-links" class="btn-primary main-action-btn">링크 생성하기</button>
+    </div>
+
+    <div class="modal result-modal" id="modal-step-2" style="display: none;">
+      <button class="btn-close-modal" id="btn-close-result">×</button>
+      <h1>ROOM CREATED</h1>
+      <div class="setup-notice success">
+        <p>✅ 방이 생성되었습니다. 아래 링크를 복사하여 공유하세요.</p>
+      </div>
+      <div id="generated-links-area" class="scroll-input-area result-link-list">
+      </div>
+      <div class="modal-footer-btns">
+        <button id="btn-enter-as-admin" class="btn-primary">방장으로 입장하기</button>
+        <button id="btn-reset-setup" class="btn-secondary">새로 만들기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 경매장 화면 -->
+  <div class="auction-container" style="display: none;">
+    <!-- 좌측: 선수 리스트 -->
+    <div class="sidebar left-sidebar">
+      <div id="player-list" class="scroll-area">
+        <!-- Renderer.renderPlayerList() -->
+      </div>
+    </div>
+
+    <!-- 중앙: 메인 스테이지 -->
+    <div class="main-dashboard">
+      <div class="dashboard-header">
+        <div id="timer" class="timer-display">--</div>
+      </div>
+
+      <div id="auction-stage-info" class="stage-info">
+        <!-- Renderer.renderStage() -->
+      </div>
+
+      <!-- 컨트롤 패널 -->
+      <div class="control-panel">
+        <!-- 입찰 컨트롤 -->
+        <div id="bidding-controls" class="bid-actions">
+          <div class="bid-label">빠른 입찰 (추가)</div>
+          <div class="bid-btn-group">
+            <button class="btn-bid plus" data-amount="5">+5</button>
+            <button class="btn-bid plus" data-amount="10">+10</button>
+            <button class="btn-bid plus" data-amount="30">+30</button>
+            <button class="btn-bid plus" data-amount="50">+50</button>
+            <button class="btn-bid plus" data-amount="100">+100</button>
+            <button class="btn-bid plus" data-amount="500">+500</button>
+          </div>
+
+          <!-- 직접 입찰 영역 -->
+          <div class="custom-bid-area">
+            <div class="bid-label">직접 입력 입찰</div>
+            <div class="custom-bid-group">
+                <input type="number" id="custom-bid-input" placeholder="금액 입력" class="bid-input">
+                <button id="btn-custom-bid" class="btn-primary bid-submit-btn">입찰</button>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 5px; margin-top: 10px; border-top: 1px solid #30363d; padding-top: 10px; justify-content: center;">
+             <button id="btn-pause" class="btn-secondary btn-small" style="background:#555;">⏸ 퍼즈 요청</button>
+             <button id="btn-resume-auction" class="btn-primary btn-small" style="display:none; background: #238636; border-color: #2ea043;">▶ 퍼즈 해제</button>
+          </div>
+        </div>
+
+        <!-- 방장 전용: CSV 업로드 및 시작 -->
+        <div id="admin-controls" style="display: none;">
+          <div class="admin-btn-group">
+            <input type="file" id="csv-upload" accept=".csv" style="display:none">
+            <button id="btn-upload-csv" class="btn-secondary">📂 명단 등록 (CSV)</button>
+            <button id="btn-start-auction" class="btn-primary">🚀 경매 시작</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 입찰 로그 영역 -->
+      <div id="auction-logs" class="log-container"></div>
+    </div>
+
+    <!-- 우측: 팀 리스트 -->
+    <div class="sidebar right-sidebar">
+      <div id="team-list" class="scroll-area">
+        <!-- Renderer.renderTeams() -->
+      </div>
+    </div>
+
+    <!-- 하단: 통계 바 -->
+    <div id="auction-stats">
+      <!-- Renderer.renderStats() -->
+    </div>
+  </div>
+</div>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
