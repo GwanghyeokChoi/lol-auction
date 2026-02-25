@@ -5,11 +5,13 @@ import { AuctionService } from './services/auctionService';
 import { RoomService } from './services/roomService';
 import { Renderer } from './ui/renderer';
 import { CSVService } from './services/csvService';
+import { PRIVACY_POLICY, TERMS_OF_SERVICE } from './constants/terms';
 
 const urlParams = new URLSearchParams(window.location.search);
 const currentRoomId = urlParams.get('id');
 const userRole = urlParams.get('role') || 'viewer';
 
+// 최신 데이터 상태 저장용 (타이머 트리거를 위해)
 let latestData: any = null;
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -69,6 +71,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const teams: any = {};
         let linksHtml = "";
         
+        // 관전자 링크 추가
         const viewerLink = `${baseUrl}?id=${roomId}&role=viewer`;
         linksHtml += `
             <div class="link-label">👀 관전자 링크</div>
@@ -113,7 +116,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('btn-enter-as-admin')?.addEventListener('click', () => {
-        const firstLink = modalStep2.querySelectorAll('input')[1]?.value;
+        const firstLink = modalStep2.querySelectorAll('input')[1]?.value; // 0번은 관전자 링크일 수 있으므로 확인 필요하지만, 보통 방장이 첫번째 팀장
         if (firstLink) window.location.href = firstLink;
     });
 
@@ -122,10 +125,12 @@ window.addEventListener('DOMContentLoaded', () => {
         setupScreen.style.display = 'none';
         auctionContainer.style.display = 'grid';
 
+        // 접속 상태 알림 시작 (팀장인 경우만)
         if (userRole !== 'viewer') {
             RoomService.connectToRoom(currentRoomId, userRole);
         }
 
+        // 관전자 모드 처리
         if (userRole === 'viewer') {
             const biddingControls = document.getElementById('bidding-controls');
             if (biddingControls) biddingControls.style.display = 'none';
@@ -134,6 +139,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if (adminControls) adminControls.style.display = 'none';
         }
 
+        // 로그 구독
         onChildAdded(ref(db, `rooms/${currentRoomId}/logs`), (snap) => {
             Renderer.renderLog(snap.val());
         });
@@ -141,8 +147,9 @@ window.addEventListener('DOMContentLoaded', () => {
         onValue(ref(db, `rooms/${currentRoomId}`), (snap) => {
             const data = snap.val();
             if (!data) return;
-            latestData = data;
+            latestData = data; // 최신 데이터 저장
 
+            // Renderer 호출
             Renderer.renderPlayerList(data.players || {}, data.live.playerOrder || []);
             Renderer.renderStage(data.live, data.players || {}, data.teams || {});
             Renderer.renderTeams(data.teams || {}, userRole);
@@ -158,27 +165,33 @@ window.addEventListener('DOMContentLoaded', () => {
             if (userRole === 'team_1' && adminZone) {
                 adminZone.style.display = 'block';
 
+                // 모든 팀이 꽉 찼는지 확인
                 const allTeamsFull = Object.values(data.teams).every((t: any) => (t.members?.length || 0) >= 4);
 
                 if (allTeamsFull) {
+                    // 경매 종료 상태 -> adminZone 보임 (다운로드 버튼)
+                    adminZone.style.display = 'block';
                     if (btnUpload) btnUpload.style.display = 'none';
                     if (btnStart) btnStart.style.display = 'none';
                     if (btnDownload) btnDownload.style.display = 'inline-block';
                 } else if (data.live.status !== 'idle') {
-                    if (btnUpload) btnUpload.style.display = 'none';
-                    if (btnStart) btnStart.style.display = 'none';
-                    if (btnDownload) btnDownload.style.display = 'none';
+                    // 경매 진행 중 -> adminZone 숨김 (일반 팀장과 동일한 UI)
+                    adminZone.style.display = 'none';
                 } else {
+                    // 경매 대기 중 -> adminZone 보임 (시작 버튼)
+                    adminZone.style.display = 'block';
                     if (btnUpload) btnUpload.style.display = 'inline-block';
                     if (btnStart) btnStart.style.display = 'inline-block';
                     if (btnDownload) btnDownload.style.display = 'none';
                 }
             }
 
+            // 재개 버튼 표시 로직
             if (data.live.status === 'paused') {
                 if (pauseBtn) pauseBtn.style.display = 'none';
                 if (resumeBtn) {
-                    if (userRole === 'team_1' || userRole === data.live.pausedBy) {
+                    // 퍼즈 건 본인만 표시 (방장 예외 제거)
+                    if (userRole === data.live.pausedBy) {
                         resumeBtn.style.display = 'inline-block';
                     } else {
                         resumeBtn.style.display = 'none';
@@ -236,16 +249,19 @@ window.addEventListener('DOMContentLoaded', () => {
                 const live = latestData.live;
                 const now = Date.now();
 
+                // 1. 쿨타임 종료 -> 다음 선수 호출
                 if (live.status === 'cooldown' && now > live.nextAuctionTime) {
                     AuctionService.nextPlayer(currentRoomId);
                 }
                 
+                // 2. 입찰 시간 종료 -> 낙찰/유찰 처리
                 if (live.status === 'bidding' && now > live.endTime) {
                     AuctionService.finalize(currentRoomId);
                 }
 
+                // 3. 퍼즈 시간 종료 -> 강제 재개
                 if (live.status === 'paused' && now > live.pauseLimitTime) {
-                    AuctionService.resumeAuction(currentRoomId, 'team_1');
+                    AuctionService.resumeAuction(currentRoomId); // requestorId 없이 호출 (시스템 강제 재개)
                 }
 
                 // 재개 대기 종료 -> 경매 시작
@@ -261,6 +277,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (userRole === 'team_1') RoomService.startAuctionProcess(currentRoomId!);
     });
 
+    // 빠른 입찰 버튼
     document.querySelectorAll('.btn-bid').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const amt = parseInt((e.target as HTMLElement).dataset.amount || "0");
@@ -268,6 +285,7 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // 직접 입찰 버튼
     const customBidInput = document.getElementById('custom-bid-input') as HTMLInputElement;
     const btnCustomBid = document.getElementById('btn-custom-bid');
 
@@ -283,19 +301,23 @@ window.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') handleCustomBid();
     });
 
+    // 퍼즈 버튼
     document.getElementById('btn-pause')?.addEventListener('click', () => {
         AuctionService.pauseAuction(currentRoomId!, userRole);
     });
 
+    // 재개 버튼
     document.getElementById('btn-resume-auction')?.addEventListener('click', () => {
         AuctionService.resumeAuction(currentRoomId!, userRole);
     });
 
+    // 결과 다운로드 버튼
     document.getElementById('btn-download-result')?.addEventListener('click', () => {
         if (!latestData) return;
         CSVService.exportResults(latestData.teams, latestData.players);
     });
 
+    // CSV 업로드
     document.getElementById('btn-upload-csv')?.addEventListener('click', () => {
         document.getElementById('csv-upload')?.click();
     });
@@ -313,6 +335,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- [모달 이벤트 핸들러] ---
     document.getElementById('btn-close-team-modal')?.addEventListener('click', () => {
         document.getElementById('team-detail-modal')!.style.display = 'none';
     });
@@ -320,6 +343,34 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('player-info-modal')!.style.display = 'none';
     });
 
+    // 약관 모달
+    const termsModal = document.getElementById('terms-modal');
+    const termsTitle = document.getElementById('terms-title');
+    const termsContent = document.getElementById('terms-content');
+
+    document.getElementById('link-privacy')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (termsModal && termsTitle && termsContent) {
+            termsTitle.innerText = "개인정보처리방침";
+            termsContent.innerText = PRIVACY_POLICY;
+            termsModal.style.display = 'flex';
+        }
+    });
+
+    document.getElementById('link-terms')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (termsModal && termsTitle && termsContent) {
+            termsTitle.innerText = "이용약관";
+            termsContent.innerText = TERMS_OF_SERVICE;
+            termsModal.style.display = 'flex';
+        }
+    });
+
+    document.getElementById('btn-close-terms')?.addEventListener('click', () => {
+        if (termsModal) termsModal.style.display = 'none';
+    });
+
+    // 팀 리스트 클릭 위임
     document.getElementById('team-list')?.addEventListener('click', (e) => {
         const card = (e.target as HTMLElement).closest('.team-card');
         if (!card || !latestData) return;
@@ -356,6 +407,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // 선수 리스트 클릭 위임
     document.getElementById('player-list')?.addEventListener('click', (e) => {
         const card = (e.target as HTMLElement).closest('.player-card');
         if (!card || !latestData) return;

@@ -15,19 +15,19 @@
   <meta property="og:url" content="https://lol-auction.co.kr/">
   <meta property="og:title" content="LOL Auction - 롤 내전 팀 경매">
   <meta property="og:description" content="실시간으로 진행되는 롤 내전 팀원 경매 시스템! 지금 바로 시작하세요.">
-<!--  <meta property="og:image" content="https://lol-auction.co.kr/og-image.png"> &lt;!&ndash; 이미지 파일 필요 시 public 폴더에 추가 &ndash;&gt;-->
+  <meta property="og:image" content="https://lol-auction.co.kr/og-image.png">
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image">
   <meta property="twitter:url" content="https://lol-auction.co.kr/">
   <meta property="twitter:title" content="LOL Auction - 롤 내전 팀 경매">
   <meta property="twitter:description" content="실시간으로 진행되는 롤 내전 팀원 경매 시스템! 지금 바로 시작하세요.">
-<!--  <meta property="twitter:image" content="https://lol-auction.co.kr/og-image.png">-->
+  <meta property="twitter:image" content="https://lol-auction.co.kr/og-image.png">
 </head>
 <body>
 <div id="app">
   <!-- 1. 설정 화면 (방 생성) -->
-  <div id="setup-screen" class="overlay">
+  <div id="setup-screen" class="screen-content">
     <div class="modal" id="modal-step-1">
       <h1>AUCTION SETUP</h1>
       <div class="setup-notice">
@@ -83,8 +83,17 @@
     </div>
   </div>
 
+  <!-- 5. 약관 모달 -->
+  <div id="terms-modal" class="overlay" style="display: none; z-index: 4000;">
+    <div class="modal" style="max-width: 800px;">
+      <button class="btn-close-modal" id="btn-close-terms">×</button>
+      <h2 id="terms-title" style="color: #c8aa6e; text-align: center; margin-bottom: 20px;"></h2>
+      <div id="terms-content" class="scroll-input-area" style="max-height: 60vh; text-align: left; white-space: pre-wrap; line-height: 1.6;"></div>
+    </div>
+  </div>
+
   <!-- 2. 경매장 화면 -->
-  <div class="auction-container" style="display: none;">
+  <div class="auction-container screen-content" style="display: none;">
     <!-- 좌측: 선수 리스트 -->
     <div class="sidebar left-sidebar">
       <div id="player-list" class="scroll-area">
@@ -158,6 +167,20 @@
       <!-- Renderer.renderStats() -->
     </div>
   </div>
+
+  <!-- 공통 Footer -->
+  <footer class="site-footer">
+    <div class="footer-content">
+      <p>&copy; 2026 Gwanghyeok Choi. All rights reserved.</p>
+      <p>
+        <a href="#" id="link-privacy">개인정보처리방침</a> | <a href="#" id="link-terms">이용약관</a>
+      </p>
+      <p class="riot-notice">
+        This site is not affiliated with or endorsed by Riot Games, Inc.<br>
+        League of Legends and all related assets are trademarks or registered trademarks of Riot Games, Inc.
+      </p>
+    </div>
+  </footer>
 </div>
 <script type="module" src="/src/main.ts"></script>
 </body>
