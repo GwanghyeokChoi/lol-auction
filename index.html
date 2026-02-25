@@ -46,6 +46,24 @@
     </div>
   </div>
 
+  <!-- 3. 팀 상세 정보 모달 -->
+  <div id="team-detail-modal" class="overlay" style="display: none; z-index: 3000;">
+    <div class="modal">
+      <button class="btn-close-modal" id="btn-close-team-modal">×</button>
+      <h2 id="team-modal-title" style="color: #c8aa6e; text-align: center; margin-bottom: 20px;">팀 정보</h2>
+      <div id="team-modal-members" class="scroll-input-area" style="max-height: 400px;"></div>
+    </div>
+  </div>
+
+  <!-- 4. 선수 상세 정보 모달 -->
+  <div id="player-info-modal" class="overlay" style="display: none; z-index: 3000;">
+    <div class="modal">
+      <button class="btn-close-modal" id="btn-close-player-modal">×</button>
+      <h2 id="player-modal-name" style="color: #c8aa6e; text-align: center; margin-bottom: 10px;">선수 정보</h2>
+      <div id="player-modal-detail" style="color: #fff;"></div>
+    </div>
+  </div>
+
   <!-- 2. 경매장 화면 -->
   <div class="auction-container" style="display: none;">
     <!-- 좌측: 선수 리스트 -->
@@ -100,6 +118,7 @@
             <input type="file" id="csv-upload" accept=".csv" style="display:none">
             <button id="btn-upload-csv" class="btn-secondary">📂 명단 등록 (CSV)</button>
             <button id="btn-start-auction" class="btn-primary">🚀 경매 시작</button>
+            <button id="btn-download-result" class="btn-primary" style="display:none; background:#238636; border-color:#2ea043;">📥 결과 다운로드</button>
           </div>
         </div>
       </div>
