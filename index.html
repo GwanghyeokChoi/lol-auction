@@ -115,8 +115,22 @@
 
     <!-- 중앙: 메인 스테이지 -->
     <div class="main-dashboard">
-      <div class="dashboard-header">
+      <div class="dashboard-header" style="position: relative; width: 100%;">
         <div id="timer" class="timer-display">--</div>
+
+        <!-- 경매장 도움말 -->
+        <div class="tooltip-container" style="position: absolute; top: 10px; right: 10px;">
+            <span class="help-icon">?</span>
+            <div class="tooltip-content" style="width: 320px; right: 0; left: auto; transform: none; top: 130%;">
+                <h3>📜 경매 규칙 & 가이드</h3>
+                <ul>
+                    <li><strong>CSV 형식:</strong> 이름, 닉네임, 티어, 주포지션, 부포지션, 모스트1~3 (헤더 X)</li>
+                    <li><strong>진행 순서:</strong> 등록된 선수가 랜덤 순서로 경매에 나옵니다.</li>
+                    <li><strong>유찰 규칙:</strong> 시간 내 입찰이 없으면 유찰되며, 대기 선수가 없을 때 다시 등장합니다.</li>
+                    <li><strong>종료 조건:</strong> 모든 팀이 팀원 4명을 채우면 즉시 종료됩니다.</li>
+                </ul>
+            </div>
+        </div>
       </div>
 
       <div id="auction-stage-info" class="stage-info">
