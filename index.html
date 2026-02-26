@@ -34,7 +34,20 @@
         <p>💡 첫 번째 칸에 입력된 팀장이 <strong>방장 권한</strong>을 가집니다.</p>
       </div>
       <div class="input-group">
-        <label>팀장 목록 및 초기 포인트</label>
+        <label style="display: flex; align-items: center; gap: 6px;">
+          팀장 목록 및 초기 포인트
+          <div class="tooltip-container">
+            <span class="help-icon">?</span>
+            <div class="tooltip-content">
+              <h3>👑 방장은 어떤 역할을 하나요?</h3>
+              <ul>
+                <li><strong>방 생성 및 초대:</strong> 경매 방을 만들고 링크를 팀장들에게 공유합니다.</li>
+                <li><strong>선수 명단 등록:</strong> CSV 파일로 참가자 명단을 일괄 등록합니다.</li>
+                <li><strong>결과 관리:</strong> 경매 종료 후 최종 팀 구성 정보를 엑셀로 다운로드합니다.</li>
+              </ul>
+            </div>
+          </div>
+        </label>
         <div id="leader-input-list" class="scroll-input-area">
           <div class="leader-row" data-index="1">
             <input type="text" class="leader-name-input" placeholder="팀장 1 이름 (방장)">
@@ -60,7 +73,6 @@
       </div>
       <div class="modal-footer-btns">
         <button id="btn-enter-as-admin" class="btn-primary">방장으로 입장하기</button>
-        <button id="btn-reset-setup" class="btn-secondary">새로 만들기</button>
       </div>
     </div>
   </div>

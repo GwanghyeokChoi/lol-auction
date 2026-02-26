@@ -22,9 +22,12 @@ export const RoomService = {
         });
     },
 
-    // 2. 선수 명단 등록 (CSV 업로드) - 기존 명단 덮어쓰기
+    // 2. 선수 명단 등록 (CSV 업로드) - 기존 명단 덮어쓰기 및 순서 초기화
     async registerPlayers(roomId: string, players: Record<string, Player>) {
+        // players 경로를 통째로 덮어쓰기 (set 사용)
         await set(ref(db, `rooms/${roomId}/players`), players);
+        // playerOrder 초기화 (set 사용)
+        await set(ref(db, `rooms/${roomId}/live/playerOrder`), []);
     },
 
     // 3. 방장이 '경매 시작' 버튼 클릭 시 랜덤 순서 확정
