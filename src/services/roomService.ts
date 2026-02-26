@@ -22,9 +22,13 @@ export const RoomService = {
         });
     },
 
-    // 2. 선수 명단 등록 (CSV 업로드) - 기존 명단 덮어쓰기
+    // 2. 선수 명단 등록 (CSV 업로드) - 기존 명단 덮어쓰기 및 순서 초기화
     async registerPlayers(roomId: string, players: Record<string, Player>) {
-        await set(ref(db, `rooms/${roomId}/players`), players);
+        const updates: any = {};
+        updates[`rooms/${roomId}/players`] = players;
+        updates[`rooms/${roomId}/live/playerOrder`] = [];
+        
+        await update(ref(db), updates);
     },
 
     // 3. 방장이 '경매 시작' 버튼 클릭 시 랜덤 순서 확정
@@ -41,6 +45,14 @@ export const RoomService = {
         const requiredPlayers = leaderIds.length * 4;
         if (playerIds.length < requiredPlayers) {
             return alert(`선수가 부족합니다. 최소 ${requiredPlayers}명이 필요합니다. (현재 ${playerIds.length}명)`);
+        }
+
+        // 팀장 접속 체크
+        const teams = data.teams;
+        const offlineLeaders = Object.values(teams).filter((t: any) => !t.online).map((t: any) => t.leaderName);
+        
+        if (offlineLeaders.length > 0) {
+            return alert(`다음 팀장들이 아직 접속하지 않았습니다:\n${offlineLeaders.join(', ')}\n\n모든 팀장이 접속해야 경매를 시작할 수 있습니다.`);
         }
 
         await update(ref(db, `rooms/${roomId}/live`), {
