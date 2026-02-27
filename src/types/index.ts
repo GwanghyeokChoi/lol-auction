@@ -2,7 +2,8 @@ export interface Player {
     id: string;
     name: string;
     nickname: string;
-    tier: string;
+    highTier: string;    // 최고 티어
+    currentTier: string; // 현재 티어
     mainPos: string;
     subPos: string;
     most: string[];
@@ -19,7 +20,7 @@ export interface Team {
 }
 
 export interface AuctionState {
-    status: 'idle' | 'bidding' | 'paused' | 'cooldown' | 'resuming'; // resuming 추가
+    status: 'idle' | 'bidding' | 'paused' | 'cooldown' | 'resuming';
     activePlayerId: string | null;
     highestBid: number;
     highestBidderId: string | null;
