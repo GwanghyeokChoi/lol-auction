@@ -7,6 +7,7 @@ import { Renderer } from './ui/renderer';
 import { CSVService } from './services/csvService';
 import { PRIVACY_POLICY, TERMS_OF_SERVICE } from './constants/terms';
 import { HELP_CONTENT, UPDATE_LOG } from './constants/content';
+import { TimerUtils } from './utils/timer';
 
 const urlParams = new URLSearchParams(window.location.search);
 const currentRoomId = urlParams.get('id');
@@ -14,6 +15,9 @@ const userRole = urlParams.get('role') || 'viewer';
 
 // 최신 데이터 상태 저장용 (타이머 트리거를 위해)
 let latestData: any = null;
+
+// 서버 시간 오프셋 초기화
+TimerUtils.initServerTimeOffset();
 
 window.addEventListener('DOMContentLoaded', () => {
     const landingScreen = document.getElementById('landing-screen') as HTMLElement;
@@ -286,6 +290,8 @@ window.addEventListener('DOMContentLoaded', () => {
             const live = latestData.live;
             const timerEl = document.getElementById('timer');
             if (!timerEl) return;
+            
+            const now = TimerUtils.getServerTime(); // 서버 시간 사용
 
             if (live.status === 'idle') {
                 // 모든 팀이 꽉 찼는지 확인하여 종료 문구 표시
@@ -298,16 +304,16 @@ window.addEventListener('DOMContentLoaded', () => {
                     timerEl.style.color = "#fff";
                 }
             } else if (live.status === 'paused') {
-                const diff = Math.ceil((live.pauseLimitTime - Date.now()) / 1000);
+                const diff = Math.ceil((live.pauseLimitTime - now) / 1000);
                 timerEl.innerText = diff > 0 ? `PAUSE ${diff}s` : "PAUSE 0s";
                 timerEl.style.color = "#ffff00";
             } else if (live.status === 'resuming') {
-                const diff = Math.ceil((live.nextAuctionTime - Date.now()) / 1000);
+                const diff = Math.ceil((live.nextAuctionTime - now) / 1000);
                 timerEl.innerText = diff > 0 ? `RESUME ${diff}s` : "GO!";
                 timerEl.style.color = "#3fb950";
             } else {
                 const target = live.status === 'bidding' ? live.endTime : live.nextAuctionTime;
-                const diff = Math.ceil((target - Date.now()) / 1000);
+                const diff = Math.ceil((target - now) / 1000);
                 
                 if (diff <= 0) {
                     timerEl.innerText = "0";
@@ -324,7 +330,7 @@ window.addEventListener('DOMContentLoaded', () => {
             setInterval(() => {
                 if (!latestData) return;
                 const live = latestData.live;
-                const now = Date.now();
+                const now = TimerUtils.getServerTime(); // 서버 시간 사용
 
                 // 1. 쿨타임 종료 -> 다음 선수 호출
                 if (live.status === 'cooldown' && now > live.nextAuctionTime) {

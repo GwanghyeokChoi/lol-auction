@@ -1,6 +1,23 @@
+import { ref, onValue } from "firebase/database";
+import { db } from "../firebase";
+
+let serverTimeOffset = 0;
+
 export const TimerUtils = {
+    initServerTimeOffset() {
+        const offsetRef = ref(db, ".info/serverTimeOffset");
+        onValue(offsetRef, (snap) => {
+            serverTimeOffset = snap.val() || 0;
+        });
+    },
+
+    getServerTime(): number {
+        return Date.now() + serverTimeOffset;
+    },
+
     getRemainingSeconds(endTime: number): number {
-        const diff = Math.ceil((endTime - Date.now()) / 1000);
+        const now = this.getServerTime();
+        const diff = Math.ceil((endTime - now) / 1000);
         return diff <= 0 ? 0 : diff;
     },
 
