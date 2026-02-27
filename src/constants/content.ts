@@ -33,6 +33,13 @@ export const UPDATE_LOG = `
 <h3>🚀 업데이트 내역</h3>
 <ul class="update-list">
     <li>
+        <span class="version">v1.3.0</span> <span class="date">2024.02.27</span>
+        <p>- 경매 화면 레이아웃 개선 (통합 카드 형태)</p>
+        <p>- 방장 전용 도움말 및 경매장 가이드 툴팁 추가</p>
+        <p>- 헤더 및 공통 Footer 적용</p>
+        <p>- 약관 및 개인정보처리방침 내용 구체화</p>
+    </li>
+    <li>
         <span class="version">v1.2.0</span> <span class="date">2024.02.26</span>
         <p>- 팀원 정보 및 선수 상세 정보 모달 추가</p>
         <p>- 퍼즈 해제 권한 수정 및 타이머 리셋 기능 추가</p>
