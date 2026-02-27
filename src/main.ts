@@ -132,11 +132,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
         // 관전자 모드 처리
         if (userRole === 'viewer') {
-            const biddingControls = document.getElementById('bidding-controls');
-            if (biddingControls) biddingControls.style.display = 'none';
+            // control-panel 자체를 숨겨서 log-container가 확장되도록 함
+            const controlPanel = document.getElementById('control-panel-container');
+            if (controlPanel) controlPanel.style.display = 'none';
             
-            const adminControls = document.getElementById('admin-controls');
-            if (adminControls) adminControls.style.display = 'none';
+            // 로그 컨테이너의 우측 보더 제거 (스타일 조정)
+            const logContainer = document.getElementById('auction-logs');
+            if (logContainer) logContainer.style.borderRight = 'none';
         }
 
         // 로그 구독
@@ -190,8 +192,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if (data.live.status === 'paused') {
                 if (pauseBtn) pauseBtn.style.display = 'none';
                 if (resumeBtn) {
-                    // 퍼즈 건 본인만 표시 (방장 예외 제거)
-                    if (userRole === data.live.pausedBy) {
+                    if (userRole === 'team_1' || userRole === data.live.pausedBy) {
                         resumeBtn.style.display = 'inline-block';
                     } else {
                         resumeBtn.style.display = 'none';
@@ -261,7 +262,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
                 // 3. 퍼즈 시간 종료 -> 강제 재개
                 if (live.status === 'paused' && now > live.pauseLimitTime) {
-                    AuctionService.resumeAuction(currentRoomId); // requestorId 없이 호출 (시스템 강제 재개)
+                    AuctionService.resumeAuction(currentRoomId, 'team_1');
                 }
 
                 // 재개 대기 종료 -> 경매 시작

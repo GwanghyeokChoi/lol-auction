@@ -26,6 +26,17 @@
 </head>
 <body>
 <div id="app">
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-content">
+      <div class="logo" id="site-logo">LOL Auction</div>
+      <nav class="nav-menu">
+        <button id="btn-open-help" class="nav-btn">도움말</button>
+        <button id="btn-open-update" class="nav-btn">업데이트 공지</button>
+      </nav>
+    </div>
+  </header>
+
   <!-- 1. 설정 화면 (방 생성) -->
   <div id="setup-screen" class="screen-content">
     <div class="modal" id="modal-step-1">
@@ -43,6 +54,7 @@
               <ul>
                 <li><strong>방 생성 및 초대:</strong> 경매 방을 만들고 링크를 팀장들에게 공유합니다.</li>
                 <li><strong>선수 명단 등록:</strong> CSV 파일로 참가자 명단을 일괄 등록합니다.</li>
+                <li><strong>경매 시작:</strong> 모든 팀장이 접속해야 경매를 시작할 수 있습니다.</li>
                 <li><strong>결과 관리:</strong> 경매 종료 후 최종 팀 구성 정보를 엑셀로 다운로드합니다.</li>
               </ul>
             </div>
@@ -104,6 +116,22 @@
     </div>
   </div>
 
+  <!-- 6. 도움말 모달 -->
+  <div id="help-modal" class="overlay" style="display: none; z-index: 4000;">
+    <div class="modal" style="max-width: 800px;">
+      <button class="btn-close-modal" id="btn-close-help">×</button>
+      <div id="help-content" class="scroll-input-area" style="max-height: 60vh; text-align: left; line-height: 1.6;"></div>
+    </div>
+  </div>
+
+  <!-- 7. 업데이트 공지 모달 -->
+  <div id="update-modal" class="overlay" style="display: none; z-index: 4000;">
+    <div class="modal" style="max-width: 800px;">
+      <button class="btn-close-modal" id="btn-close-update">×</button>
+      <div id="update-content" class="scroll-input-area" style="max-height: 60vh; text-align: left; line-height: 1.6;"></div>
+    </div>
+  </div>
+
   <!-- 2. 경매장 화면 -->
   <div class="auction-container screen-content" style="display: none;">
     <!-- 좌측: 선수 리스트 -->
@@ -125,7 +153,6 @@
                 <h3>📜 경매 규칙 & 가이드</h3>
                 <ul>
                     <li><strong>CSV 형식:</strong> 이름, 닉네임, 티어, 주포지션, 부포지션, 모스트1~3 (헤더 X)</li>
-                    <li><strong>경매 시작:</strong> 모든 팀장이 접속해야 경매를 시작할 수 있습니다.</li>
                     <li><strong>진행 순서:</strong> 등록된 선수가 랜덤 순서로 경매에 나옵니다.</li>
                     <li><strong>유찰 규칙:</strong> 시간 내 입찰이 없으면 유찰되며, 대기 선수가 없을 때 다시 등장합니다.</li>
                     <li><strong>종료 조건:</strong> 모든 팀이 팀원 4명을 채우면 즉시 종료됩니다.</li>
@@ -134,52 +161,62 @@
         </div>
       </div>
 
-      <div id="auction-stage-info" class="stage-info">
-        <!-- Renderer.renderStage() -->
-      </div>
+      <!-- 2. 상태 메시지 (타이머 하단) -->
+      <div id="auction-status-message" class="status-message"></div>
 
-      <!-- 컨트롤 패널 -->
-      <div class="control-panel">
-        <!-- 입찰 컨트롤 -->
-        <div id="bidding-controls" class="bid-actions">
-          <div class="bid-label">빠른 입찰 (추가)</div>
-          <div class="bid-btn-group">
-            <button class="btn-bid plus" data-amount="5">+5</button>
-            <button class="btn-bid plus" data-amount="10">+10</button>
-            <button class="btn-bid plus" data-amount="30">+30</button>
-            <button class="btn-bid plus" data-amount="50">+50</button>
-            <button class="btn-bid plus" data-amount="100">+100</button>
-            <button class="btn-bid plus" data-amount="500">+500</button>
-          </div>
+      <!-- 3. 통합 카드 (선수 정보 + 로그 + 입찰 패널) -->
+      <div class="auction-card">
+        <!-- 선수 정보 -->
+        <div id="player-info-area" class="player-info-area">
+            <!-- Renderer.renderPlayerInfo() -->
+        </div>
 
-          <!-- 직접 입찰 영역 -->
-          <div class="custom-bid-area">
-            <div class="bid-label">직접 입력 입찰</div>
-            <div class="custom-bid-group">
-                <input type="number" id="custom-bid-input" placeholder="금액 입력" class="bid-input">
-                <button id="btn-custom-bid" class="btn-primary bid-submit-btn">입찰</button>
+        <!-- 하단 영역: 로그 + 입찰 패널 -->
+        <div class="card-bottom-area">
+            <!-- 로그 -->
+            <div id="auction-logs" class="log-container"></div>
+
+            <!-- 입찰 패널 -->
+            <div class="control-panel" id="control-panel-container">
+                <!-- 입찰 컨트롤 -->
+                <div id="bidding-controls" class="bid-actions">
+                  <div class="bid-label">빠른 입찰 (추가)</div>
+                  <div class="bid-btn-group">
+                    <button class="btn-bid plus" data-amount="5">+5</button>
+                    <button class="btn-bid plus" data-amount="10">+10</button>
+                    <button class="btn-bid plus" data-amount="30">+30</button>
+                    <button class="btn-bid plus" data-amount="50">+50</button>
+                    <button class="btn-bid plus" data-amount="100">+100</button>
+                    <button class="btn-bid plus" data-amount="500">+500</button>
+                  </div>
+
+                  <!-- 직접 입찰 영역 -->
+                  <div class="custom-bid-area">
+                    <div class="bid-label">직접 입력 입찰</div>
+                    <div class="custom-bid-group">
+                        <input type="number" id="custom-bid-input" placeholder="금액 입력" class="bid-input">
+                        <button id="btn-custom-bid" class="btn-primary bid-submit-btn">입찰</button>
+                    </div>
+                  </div>
+
+                  <div style="display: flex; gap: 5px; margin-top: 10px; border-top: 1px solid #30363d; padding-top: 10px; justify-content: center;">
+                     <button id="btn-pause" class="btn-secondary btn-small" style="background:#555;">⏸ 퍼즈 요청</button>
+                     <button id="btn-resume-auction" class="btn-primary btn-small" style="display:none; background: #238636; border-color: #2ea043;">▶ 퍼즈 해제</button>
+                  </div>
+                </div>
+
+                <!-- 방장 전용: CSV 업로드 및 시작 -->
+                <div id="admin-controls" style="display: none;">
+                  <div class="admin-btn-group">
+                    <input type="file" id="csv-upload" accept=".csv" style="display:none">
+                    <button id="btn-upload-csv" class="btn-secondary">📂 명단 등록 (CSV)</button>
+                    <button id="btn-start-auction" class="btn-primary">🚀 경매 시작</button>
+                    <button id="btn-download-result" class="btn-primary" style="display:none; background:#238636; border-color:#2ea043;">📥 결과 다운로드</button>
+                  </div>
+                </div>
             </div>
-          </div>
-
-          <div style="display: flex; gap: 5px; margin-top: 10px; border-top: 1px solid #30363d; padding-top: 10px; justify-content: center;">
-             <button id="btn-pause" class="btn-secondary btn-small" style="background:#555;">⏸ 퍼즈 요청</button>
-             <button id="btn-resume-auction" class="btn-primary btn-small" style="display:none; background: #238636; border-color: #2ea043;">▶ 퍼즈 해제</button>
-          </div>
-        </div>
-
-        <!-- 방장 전용: CSV 업로드 및 시작 -->
-        <div id="admin-controls" style="display: none;">
-          <div class="admin-btn-group">
-            <input type="file" id="csv-upload" accept=".csv" style="display:none">
-            <button id="btn-upload-csv" class="btn-secondary">📂 명단 등록 (CSV)</button>
-            <button id="btn-start-auction" class="btn-primary">🚀 경매 시작</button>
-            <button id="btn-download-result" class="btn-primary" style="display:none; background:#238636; border-color:#2ea043;">📥 결과 다운로드</button>
-          </div>
         </div>
       </div>
-
-      <!-- 입찰 로그 영역 -->
-      <div id="auction-logs" class="log-container"></div>
     </div>
 
     <!-- 우측: 팀 리스트 -->
