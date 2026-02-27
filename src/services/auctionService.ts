@@ -95,6 +95,7 @@ export const AuctionService = {
     async _processBid(roomId: string, teamId: string, nextBid: number, data: any) {
         const live = data.live;
         const currentBid = live.highestBid || 0;
+        const activePlayer = data.players[live.activePlayerId!]; // 현재 경매 대상 선수
 
         // 중복 입찰 방지
         if (live.highestBidderId === teamId && nextBid >= currentBid) {
@@ -121,11 +122,11 @@ export const AuctionService = {
         updates[`rooms/${roomId}/live/highestBidderId`] = teamId;
         updates[`rooms/${roomId}/live/endTime`] = Date.now() + 15000;
 
-        // 로그 기록
+        // 로그 기록 (선수 이름 포함)
         const logKey = push(ref(db, `rooms/${roomId}/logs`)).key;
         const actionText = nextBid < currentBid ? "정정" : "입찰";
         updates[`rooms/${roomId}/logs/${logKey}`] = {
-            msg: `<strong>${data.teams[teamId].leaderName}</strong>님이 <span class="amt" style="font-size:1.1em">${nextBid}P</span>에 ${actionText}했습니다!`,
+            msg: `<strong>${data.teams[teamId].leaderName}</strong>님이 <strong>${activePlayer.name}</strong>에게 <span class="amt" style="font-size:1.1em">${nextBid}P</span> ${actionText}!`,
             timestamp: Date.now()
         };
 
@@ -167,10 +168,8 @@ export const AuctionService = {
 
         if (live.status !== 'paused') return;
 
-        // 권한 체크: requestorId가 있으면(사용자 요청), 반드시 pausedBy와 일치해야 함.
-        // requestorId가 없으면(시스템 강제 해제) 통과.
-        if (requestorId && live.pausedBy !== requestorId) {
-            return alert("퍼즈를 건 당사자만 해제할 수 있습니다.");
+        if (requestorId && requestorId !== 'team_1' && live.pausedBy !== requestorId) {
+            return alert("본인이 요청한 퍼즈만 해제할 수 있습니다.");
         }
 
         const updates: any = {};
@@ -201,6 +200,7 @@ export const AuctionService = {
         const snap = await get(ref(db, `rooms/${roomId}`));
         const data = snap.val();
         const live = data.live;
+        const activePlayer = data.players[live.activePlayerId!]; // 현재 경매 대상 선수
         
         if (live.status === 'cooldown') return;
 
@@ -215,10 +215,10 @@ export const AuctionService = {
             const currentMembers = winner.members || [];
             updates[`rooms/${roomId}/teams/${live.highestBidderId}/members`] = [...currentMembers, live.activePlayerId];
             
-            resultMsg = `🎉 <strong>${winner.leaderName}</strong>팀 낙찰! (<span class="amt">${live.highestBid}P</span>)`;
+            resultMsg = `🎉 <strong>${activePlayer.name}</strong> -> <strong>${winner.leaderName}</strong>팀 낙찰! (<span class="amt">${live.highestBid}P</span>)`;
         } else {
             updates[`rooms/${roomId}/players/${live.activePlayerId}/status`] = 'passed';
-            resultMsg = `❌ 유찰되었습니다.`;
+            resultMsg = `❌ <strong>${activePlayer.name}</strong>님이 유찰되었습니다.`;
         }
 
         const logKey = push(ref(db, `rooms/${roomId}/logs`)).key;

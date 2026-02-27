@@ -18,78 +18,51 @@ export const Renderer = {
         el.innerHTML = `<div class="panel-header">PLAYERS (경매 순서)</div><div class="scroll-area">${listHtml}</div>`;
     },
 
-    // 2. 중앙 상세 정보
+    // 2. 중앙 상세 정보 및 상태 메시지
     renderStage(live: AuctionState, players: Record<string, Player>, teams: Record<string, Team>) {
-        const el = document.getElementById('auction-stage-info');
-        if (!el) return;
+        const statusEl = document.getElementById('auction-status-message');
+        const infoEl = document.getElementById('player-info-area');
+        
+        if (!statusEl || !infoEl) return;
 
+        // 상태 메시지 렌더링
+        let statusHtml = '';
         if (live.status === 'resuming') {
-            el.innerHTML = `
-                <div class="player-detail-card">
-                    <div class="cooldown-notice">
-                        <h2 style="color:#3fb950">퍼즈 해제</h2>
-                        <p style="font-size: 18px; margin-top: 10px;">5초 후 경매가 재개됩니다.</p>
-                    </div>
-                </div>`;
-            return;
-        }
-
-        if (live.status === 'cooldown') {
-            let title = "경매 종료";
-            let content = "";
-
+            statusHtml = `<span style="color:#3fb950">퍼즈 해제! 5초 후 재개됩니다.</span>`;
+        } else if (live.status === 'cooldown') {
             if (live.highestBidderId) {
                 const winner = teams[live.highestBidderId]?.leaderName;
-                content = `<span style="color:#c8aa6e">${winner}</span> 팀에게 <span style="color:#fff">${live.highestBid}P</span> 낙찰!`;
+                statusHtml = `<span style="color:#c8aa6e">${winner}</span> 팀에게 <span style="color:#fff">${live.highestBid}P</span> 낙찰!`;
             } else if (live.activePlayerId && players[live.activePlayerId]?.status === 'passed') {
-                content = `입찰자가 없어 <span style="color:#ff4655">유찰</span>되었습니다.`;
+                statusHtml = `<span style="color:#ff4655">유찰되었습니다.</span>`;
             } else {
-                // 최초 시작 또는 특별한 결과가 없는 경우
-                title = "경매 시작";
-                content = "곧 경매가 시작합니다. 준비해 주세요!";
+                statusHtml = `곧 경매가 시작합니다. 준비해 주세요!`;
             }
-
-            el.innerHTML = `
-                <div class="player-detail-card">
-                    <div class="cooldown-notice">
-                        <h2>${title}</h2>
-                        <p style="font-size: 18px; margin-top: 10px;">${content}</p>
-                        <p style="color: #888; margin-top: 20px;">잠시 후 다음 선수가 등장합니다...</p>
-                    </div>
-                </div>`;
-            return;
+        } else if (live.status === 'paused') {
+            statusHtml = `<span style="color:#ffff00">일시 정지 상태입니다.</span>`;
+        } else if (live.status === 'bidding') {
+            const currentLeader = live.highestBidderId ? teams[live.highestBidderId] : null;
+            statusHtml = `현재 최고가: <span style="color:#ff4655">${live.highestBid || 0}P</span> <span style="font-size:0.8em; color:#c8aa6e">(${currentLeader ? currentLeader.leaderName : '입찰 없음'})</span>`;
+        } else {
+            statusHtml = `경매 대기 중`;
         }
+        statusEl.innerHTML = statusHtml;
 
+        // 선수 정보 렌더링
         if (!live.activePlayerId || !players[live.activePlayerId]) {
-            // 모든 팀이 꽉 찼는지 확인 (여기서는 데이터 접근이 어려우므로 main.ts에서 처리하거나 간단히 표시)
-            // 하지만 live 상태가 idle이면 대기 중
-            el.innerHTML = `<div class="idle-notice" style="text-align:center; padding:50px;">
-                <h2>경매 대기 중</h2>
-                <p>방장이 '경매 시작'을 누르면 진행됩니다.</p>
-            </div>`;
+            infoEl.innerHTML = `<div style="padding: 50px; color: #888;">대기 중인 선수가 없습니다.</div>`;
             return;
         }
 
         const p = players[live.activePlayerId];
-        const highestBidder = live.highestBidderId ? teams[live.highestBidderId] : null;
-
-        el.innerHTML = `
-            <div class="player-detail-card">
-                <span class="p-name">${p.name}</span>
-                <span class="p-nick">(${p.nickname})</span>
-                <div class="tier-badge">${p.tier}</div>
-                <div class="p-info-grid">
-                    <div><strong>주 포지션:</strong> ${p.mainPos}</div>
-                    <div><strong>부 포지션:</strong> ${p.subPos}</div>
-                    <div class="full"><strong>Most:</strong> ${p.most ? p.most.join(', ') : '-'}</div>
-                </div>
-                <div class="turn-box ${live.status === 'paused' ? 'paused' : ''}">
-                    ${live.status === 'paused' 
-                        ? '⏸ 퍼즈 중' 
-                        : `현재 최고가: <strong style="color: #ff4655; font-size: 28px;">${live.highestBid || 0} P</strong><br>
-                           <span style="font-size: 16px; color: #c8aa6e;">${highestBidder ? `👑 ${highestBidder.leaderName}` : '(입찰 없음)'}</span>`
-                    }
-                </div>
+        infoEl.innerHTML = `
+            <span class="p-name">${p.name}</span>
+            <span class="p-nick">(${p.nickname})</span>
+            <div class="tier-badge">${p.tier}</div>
+            <div class="p-info-grid">
+                <div><strong>주 포지션:</strong> ${p.mainPos}</div>
+                <div><strong>부 포지션:</strong> ${p.subPos}</div>
+                <div class="full"><strong>Most:</strong> ${p.most ? p.most.join(', ') : '-'}</div>
             </div>
         `;
     },

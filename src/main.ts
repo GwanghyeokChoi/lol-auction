@@ -6,6 +6,7 @@ import { RoomService } from './services/roomService';
 import { Renderer } from './ui/renderer';
 import { CSVService } from './services/csvService';
 import { PRIVACY_POLICY, TERMS_OF_SERVICE } from './constants/terms';
+import { HELP_CONTENT, UPDATE_LOG } from './constants/content';
 
 const urlParams = new URLSearchParams(window.location.search);
 const currentRoomId = urlParams.get('id');
@@ -21,6 +22,36 @@ window.addEventListener('DOMContentLoaded', () => {
     const auctionContainer = document.querySelector('.auction-container') as HTMLElement;
     const leaderInputList = document.getElementById('leader-input-list') as HTMLElement;
     const linkArea = document.getElementById('generated-links-area') as HTMLElement;
+
+    // --- [Header Events] ---
+    document.getElementById('site-logo')?.addEventListener('click', () => {
+        window.location.href = window.location.origin + window.location.pathname;
+    });
+
+    const helpModal = document.getElementById('help-modal');
+    const helpContent = document.getElementById('help-content');
+    document.getElementById('btn-open-help')?.addEventListener('click', () => {
+        if (helpModal && helpContent) {
+            helpContent.innerHTML = HELP_CONTENT;
+            helpModal.style.display = 'flex';
+        }
+    });
+    document.getElementById('btn-close-help')?.addEventListener('click', () => {
+        if (helpModal) helpModal.style.display = 'none';
+    });
+
+    const updateModal = document.getElementById('update-modal');
+    const updateContent = document.getElementById('update-content');
+    document.getElementById('btn-open-update')?.addEventListener('click', () => {
+        if (updateModal && updateContent) {
+            updateContent.innerHTML = UPDATE_LOG;
+            updateModal.style.display = 'flex';
+        }
+    });
+    document.getElementById('btn-close-update')?.addEventListener('click', () => {
+        if (updateModal) updateModal.style.display = 'none';
+    });
+
 
     // --- [방 생성 UI 제어] ---
     const reIndexLeaders = () => {
@@ -137,6 +168,14 @@ window.addEventListener('DOMContentLoaded', () => {
             
             const adminControls = document.getElementById('admin-controls');
             if (adminControls) adminControls.style.display = 'none';
+            
+            // control-panel 자체를 숨겨서 log-container가 확장되도록 함
+            const controlPanel = document.getElementById('control-panel-container');
+            if (controlPanel) controlPanel.style.display = 'none';
+            
+            // 로그 컨테이너의 우측 보더 제거 (스타일 조정)
+            const logContainer = document.getElementById('auction-logs');
+            if (logContainer) logContainer.style.borderRight = 'none';
         }
 
         // 로그 구독
@@ -163,8 +202,6 @@ window.addEventListener('DOMContentLoaded', () => {
             const pauseBtn = document.getElementById('btn-pause');
 
             if (userRole === 'team_1' && adminZone) {
-                adminZone.style.display = 'block';
-
                 // 모든 팀이 꽉 찼는지 확인
                 const allTeamsFull = Object.values(data.teams).every((t: any) => (t.members?.length || 0) >= 4);
 
@@ -190,8 +227,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if (data.live.status === 'paused') {
                 if (pauseBtn) pauseBtn.style.display = 'none';
                 if (resumeBtn) {
-                    // 퍼즈 건 본인만 표시 (방장 예외 제거)
-                    if (userRole === data.live.pausedBy) {
+                    if (userRole === 'team_1' || userRole === data.live.pausedBy) {
                         resumeBtn.style.display = 'inline-block';
                     } else {
                         resumeBtn.style.display = 'none';
@@ -261,7 +297,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
                 // 3. 퍼즈 시간 종료 -> 강제 재개
                 if (live.status === 'paused' && now > live.pauseLimitTime) {
-                    AuctionService.resumeAuction(currentRoomId); // requestorId 없이 호출 (시스템 강제 재개)
+                    AuctionService.resumeAuction(currentRoomId, 'team_1');
                 }
 
                 // 재개 대기 종료 -> 경매 시작

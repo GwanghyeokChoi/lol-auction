@@ -20,6 +20,50 @@ body {
     position: relative;
 }
 
+/* --- [Header] --- */
+.site-header {
+    background: #0d1117;
+    border-bottom: 1px solid #30363d;
+    padding: 10px 20px;
+    flex: 0 0 auto;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: bold;
+    color: #c8aa6e;
+    cursor: pointer;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 10px;
+}
+
+.nav-btn {
+    background: transparent;
+    border: 1px solid #30363d;
+    color: #8b949e;
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.nav-btn:hover {
+    border-color: #8b949e;
+    color: #fff;
+}
+
 /* --- [2. 설정 및 결과 모달] --- */
 .overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -36,11 +80,21 @@ body {
 }
 
 .modal {
-    background: #1c1c1f; padding: 30px; border: 1px solid #c8aa6e;
+    background: #1c1c1f;
+    padding: 40px 30px 30px 30px;
+    border: 1px solid #c8aa6e;
     width: 95%; max-width: 500px; max-height: 90vh; overflow-y: auto;
     border-radius: 8px; position: relative;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
     transition: 0.3s;
+
+    /* 스크롤바 숨김 */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.modal::-webkit-scrollbar {
+    display: none;
 }
 
 .modal.dimmed { opacity: 0.3; pointer-events: none; transform: scale(0.95); }
@@ -55,6 +109,7 @@ body {
     position: absolute; top: 15px; right: 20px;
     background: none; border: none; color: #c8aa6e;
     font-size: 32px; cursor: pointer; line-height: 1;
+    z-index: 10;
 }
 
 .modal h1 { color: #c8aa6e; text-align: center; margin-bottom: 20px; letter-spacing: 2px; font-size: 24px; }
@@ -85,6 +140,14 @@ input[type="number"], .leader-name-input {
 .scroll-input-area {
     max-height: 300px; overflow-y: auto; background: #0d1117;
     padding: 15px; border: 1px solid #30363d; margin-bottom: 15px; border-radius: 4px;
+
+    /* 스크롤바 숨김 */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.scroll-input-area::-webkit-scrollbar {
+    display: none;
 }
 
 .link-row { display: flex; gap: 8px; margin-bottom: 10px; }
@@ -153,6 +216,14 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     flex: 1;
     overflow-y: auto;
     padding: 10px;
+
+    /* 스크롤바 숨김 */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.scroll-area::-webkit-scrollbar {
+    display: none;
 }
 
 /* --- [6. 중앙 경매 카드 & 상태] --- */
@@ -171,6 +242,7 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     margin-bottom: 10px; /* 마진 축소 */
     text-align: center;
     flex: 0 0 auto; /* 크기 고정 */
+    width: 100%;
 }
 
 .timer-display {
@@ -181,85 +253,86 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     text-shadow: 0 0 20px rgba(255, 70, 85, 0.5);
 }
 
-.stage-info {
-    width: 100%;
-    max-width: 600px;
-    margin-bottom: 15px; /* 마진 축소 */
-    flex: 0 0 auto; /* 크기 고정 */
-}
-
-.player-detail-card {
-    background: rgba(10, 10, 12, 0.95);
-    border: 2px solid #c8aa6e;
-    padding: 20px; /* 패딩 축소 */
+/* --- [New Layout: 통합 카드] --- */
+.status-message {
     width: 100%;
     text-align: center;
+    margin-bottom: 10px;
+    min-height: 30px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #c8aa6e;
+    flex: 0 0 auto;
+}
+
+.auction-card {
+    width: 100%;
+    max-width: 900px; /* 1100px -> 900px 원복 */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: rgba(10, 10, 12, 0.95);
+    border: 2px solid #c8aa6e;
     border-radius: 8px;
     box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    overflow: hidden;
+    margin-bottom: 10px;
 }
 
-.p-name { font-size: 28px; font-weight: bold; display: block; color: #fff; }
-.p-nick { font-size: 16px; color: #888; display: block; margin-bottom: 8px; }
-.tier-badge {
-    display: inline-block;
-    padding: 4px 12px;
-    background: #333;
-    border-radius: 20px;
-    color: #c8aa6e;
-    font-weight: bold;
-    margin-bottom: 15px;
+.player-info-area {
+    padding: 20px;
+    border-bottom: 1px solid #333;
+    text-align: center;
+    flex: 0 0 auto;
 }
 
-.p-info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    text-align: left;
-    background: #1c1f23;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 15px;
-    font-size: 14px;
+.card-bottom-area {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
 }
-.p-info-grid .full { grid-column: span 2; }
 
-.turn-box {
-    background: #0d1117;
-    padding: 10px;
-    border-radius: 4px;
-    border: 1px solid #30363d;
-    font-size: 20px;
-}
-.turn-box strong { color: #c8aa6e; font-size: 20px; }
-
-/* 로그 영역 */
+/* 로그 영역 (좌측) */
 .log-container {
     width: 100%;
-    max-width: 600px;
     flex: 1; /* 남은 공간 모두 차지 */
     min-height: 0; /* flexbox 스크롤 필수 */
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.3);
     border: 1px solid #30363d;
     border-radius: 4px;
     margin-bottom: 10px;
     overflow-y: auto;
-    padding: 10px;
+    padding: 15px;
     font-size: 13px;
     color: #8b949e;
+    margin: 0; /* 기존 마진 제거 */
+    border-radius: 0; /* 기존 보더 반경 제거 */
+    border: none; /* 기존 보더 제거 */
+    border-right: 1px solid #333; /* 우측 보더만 유지 */
+
+    /* 스크롤바 숨김 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
 }
+
+.log-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
 .log-item { margin-bottom: 4px; border-bottom: 1px solid #333; padding-bottom: 2px; }
 .log-item strong { color: #c8aa6e; }
 .log-item .amt { color: #ff4655; font-weight: bold; }
 
-/* 컨트롤 패널 */
+/* 입찰 패널 (우측) */
 .control-panel {
-    width: 100%;
-    max-width: 600px;
+    width: 320px;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-bottom: 10px;
-    flex: 0 0 auto; /* 크기 고정 */
+    padding: 15px;
+    background: #161b22;
+    margin: 0; /* 기존 마진 제거 */
 }
 
 .admin-btn-group {
@@ -268,10 +341,9 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
 }
 
 .bid-actions {
-    background: #161b22;
-    padding: 15px; /* 패딩 축소 */
-    border-radius: 8px;
-    border: 1px solid #30363d;
+    background: transparent; /* 배경 투명화 (부모가 배경 있음) */
+    padding: 0;
+    border: none;
     text-align: center;
 }
 
@@ -283,7 +355,7 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
 
 .bid-btn-group {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(3, 1fr); /* 3열로 변경 (공간 확보) */
     gap: 5px;
 }
 
@@ -334,6 +406,34 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
 .bid-submit-btn:hover {
     background: #e0c286;
 }
+
+/* --- [Player Info Styles] --- */
+.p-name { font-size: 28px; font-weight: bold; display: block; color: #fff; }
+.p-nick { font-size: 16px; color: #888; display: block; margin-bottom: 8px; }
+.tier-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #333;
+    border-radius: 20px;
+    color: #c8aa6e;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.p-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    text-align: left;
+    background: #1c1f23;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    max-width: 600px;
+    margin: 0 auto 15px auto;
+}
+.p-info-grid .full { grid-column: span 2; }
 
 /* --- [7. 사이드바 아이템] --- */
 .player-card {
@@ -468,6 +568,61 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     font-size: 12px;
     margin-bottom: 5px;
     line-height: 1.4;
+}
+
+/* --- [11. 업데이트 리스트 & 도움말 컨텐츠 스타일] --- */
+.update-list {
+    list-style: none;
+    padding: 0;
+}
+
+.update-list li {
+    border-bottom: 1px solid #333;
+    padding: 15px 0;
+}
+
+.update-list li:last-child {
+    border-bottom: none;
+}
+
+.update-list .version {
+    font-weight: bold;
+    color: #c8aa6e;
+    margin-right: 10px;
+}
+
+.update-list .date {
+    font-size: 12px;
+    color: #888;
+}
+
+.update-list p {
+    margin: 5px 0 0 0;
+    color: #ccc;
+    font-size: 14px;
+}
+
+/* 도움말 컨텐츠 스타일 추가 */
+#help-content h3, #update-content h3 {
+    color: #c8aa6e;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+}
+
+#help-content p, #update-content p {
+    margin-bottom: 10px;
+    color: #ddd;
+}
+
+#help-content ul, #update-content ul {
+    padding-left: 20px;
+    margin-bottom: 20px;
+}
+
+#help-content li, #update-content li {
+    margin-bottom: 5px;
+    color: #bbb;
 }
 
 @keyframes modalPop {
