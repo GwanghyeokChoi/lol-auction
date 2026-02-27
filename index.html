@@ -23,6 +23,7 @@
   <meta property="twitter:title" content="LOL Auction - 롤 내전 팀 경매">
   <meta property="twitter:description" content="실시간으로 진행되는 롤 내전 팀원 경매 시스템! 지금 바로 시작하세요.">
   <meta property="twitter:image" content="https://lol-auction.co.kr/og-image.png">
+  <script src="src/constants/content.ts"></script>
 </head>
 <body>
 <div id="app">
@@ -151,6 +152,17 @@
     <div class="modal" style="max-width: 800px;">
       <button class="btn-close-modal" id="btn-close-update">×</button>
       <div id="update-content" class="scroll-input-area" style="max-height: 60vh; text-align: left; line-height: 1.6;"></div>
+    </div>
+  </div>
+
+  <!-- 8. 모바일 접속 경고 오버레이 -->
+  <div id="mobile-warning" class="overlay" style="display: none; z-index: 10000; background: rgba(0,0,0,0.8);">
+    <div class="modal" style="text-align: center; width: 80%; max-width: 300px; background: #1c1c1f; border: 1px solid #ff4655; padding: 30px;">
+      <h2 style="color: #ff4655; margin-bottom: 15px; font-size: 20px;">🖥️ PC 접속 권장</h2>
+      <p style="color: #ccc; margin-bottom: 20px; line-height: 1.5; font-size: 14px;">
+        원활한 경매 진행을 위해<br>PC 환경에서 접속해 주세요.
+      </p>
+      <button id="btn-close-warning" class="btn-secondary" style="width: 100%;">계속하기</button>
     </div>
   </div>
 

@@ -24,6 +24,17 @@ window.addEventListener('DOMContentLoaded', () => {
     const leaderInputList = document.getElementById('leader-input-list') as HTMLElement;
     const linkArea = document.getElementById('generated-links-area') as HTMLElement;
 
+    // --- [모바일 접속 경고] ---
+    if (window.innerWidth <= 768) {
+        const warning = document.getElementById('mobile-warning');
+        if (warning) warning.style.display = 'flex';
+    }
+
+    document.getElementById('btn-close-warning')?.addEventListener('click', () => {
+        const warning = document.getElementById('mobile-warning');
+        if (warning) warning.style.display = 'none';
+    });
+
     // --- [초기 화면 제어] ---
     if (currentRoomId) {
         // 방에 입장한 경우: 랜딩/설정 숨기고 경매장 표시
@@ -47,8 +58,6 @@ window.addEventListener('DOMContentLoaded', () => {
         // URL 파라미터 제거 (메인 URL로 변경)
         const newUrl = window.location.origin + window.location.pathname;
         window.history.pushState({ path: newUrl }, '', newUrl);
-        
-        // 필요하다면 여기서 입력 필드 초기화 등을 수행할 수 있음
     });
 
     const helpModal = document.getElementById('help-modal');
@@ -182,9 +191,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // --- [실시간 경매 로직] ---
     if (currentRoomId) {
-        setupScreen.style.display = 'none';
-        auctionContainer.style.display = 'grid';
-
         // 접속 상태 알림 시작 (팀장인 경우만)
         if (userRole !== 'viewer') {
             RoomService.connectToRoom(currentRoomId, userRole);
