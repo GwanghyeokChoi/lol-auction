@@ -186,11 +186,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btn-enter-as-admin')?.addEventListener('click', () => {
         const firstLink = modalStep2.querySelectorAll('input')[1]?.value; // 0번은 관전자 링크일 수 있으므로 확인 필요하지만, 보통 방장이 첫번째 팀장
-        if (firstLink) window.location.href = firstLink;
+        if (firstLink) window.open(firstLink, '_blank'); // 새 탭으로 열기
     });
 
     // --- [실시간 경매 로직] ---
     if (currentRoomId) {
+        setupScreen.style.display = 'none';
+        auctionContainer.style.display = 'grid';
+
         // 접속 상태 알림 시작 (팀장인 경우만)
         if (userRole !== 'viewer') {
             RoomService.connectToRoom(currentRoomId, userRole);
