@@ -1,5 +1,23 @@
 import type { Player, Team, AuctionState } from "../types";
 
+// 티어별 색상 반환 함수
+const getTierColor = (tier: string): string => {
+    if (!tier) return '#fff';
+    const t = tier.trim();
+    if (t.startsWith('언랭크')) return '#808080';
+    if (t.startsWith('아이언')) return '#544546';
+    if (t.startsWith('브론즈')) return '#935b55';
+    if (t.startsWith('실버')) return '#808080';
+    if (t.startsWith('골드')) return '#b8860b';
+    if (t.startsWith('플래티넘')) return '#0a8d5e';
+    if (t.startsWith('에메랄드')) return '#006400';
+    if (t.startsWith('다이아')) return '#5c6eb4';
+    if (t.startsWith('마스터')) return '#9400d3';
+    if (t.startsWith('그랜드마스터')) return '#dd534a';
+    if (t.startsWith('챌린저')) return '#1583af';
+    return '#fff'; // 기본값
+};
+
 export const Renderer = {
     // 1. 좌측 플레이어 리스트 (경매 순서)
     renderPlayerList(players: Record<string, Player>, order: string[]) {
@@ -10,8 +28,9 @@ export const Renderer = {
         const listHtml = sortedIds.map(id => {
             const p = players[id];
             if (!p) return '';
+            const tierColor = getTierColor(p.currentTier);
             return `<div class="player-card ${p.status}" data-id="${p.id}">
-                <strong>${p.name}</strong> <small>${p.currentTier} (${p.mainPos})</small>
+                <strong>${p.name}</strong> <small style="color:${tierColor}">${p.currentTier}</small> <small>(${p.mainPos})</small>
             </div>`;
         }).join('');
 
@@ -55,12 +74,16 @@ export const Renderer = {
         }
 
         const p = players[live.activePlayerId];
+        const highTierColor = getTierColor(p.highTier);
+        const currentTierColor = getTierColor(p.currentTier);
+
         infoEl.innerHTML = `
             <span class="p-name">${p.name}</span>
             <span class="p-nick">(${p.nickname})</span>
             <div class="tier-badge">
-                <span style="color:#aaa; font-size:0.8em;">최고:</span> ${p.highTier} / 
-                <span style="color:#aaa; font-size:0.8em;">현재:</span> ${p.currentTier}
+                <span style="color:#aaa; font-size:0.8em;">최고:</span> <span style="color:${highTierColor}; font-weight:bold;">${p.highTier}</span>
+                <span style="color:#444; margin:0 8px;">|</span>
+                <span style="color:#aaa; font-size:0.8em;">현재:</span> <span style="color:${currentTierColor}; font-weight:bold;">${p.currentTier}</span>
             </div>
             <div class="p-info-grid">
                 <div><strong>주 포지션:</strong> ${p.mainPos}</div>
