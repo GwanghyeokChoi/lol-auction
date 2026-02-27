@@ -267,7 +267,8 @@ window.addEventListener('DOMContentLoaded', () => {
             if (data.live.status === 'paused') {
                 if (pauseBtn) pauseBtn.style.display = 'none';
                 if (resumeBtn) {
-                    if (userRole === 'team_1' || userRole === data.live.pausedBy) {
+                    // 퍼즈 건 본인만 표시 (방장 예외 제거)
+                    if (userRole === data.live.pausedBy) {
                         resumeBtn.style.display = 'inline-block';
                     } else {
                         resumeBtn.style.display = 'none';
@@ -337,7 +338,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
                 // 3. 퍼즈 시간 종료 -> 강제 재개
                 if (live.status === 'paused' && now > live.pauseLimitTime) {
-                    AuctionService.resumeAuction(currentRoomId, 'team_1');
+                    AuctionService.resumeAuction(currentRoomId); // requestorId 없이 호출 (시스템 강제 재개)
                 }
 
                 // 재개 대기 종료 -> 경매 시작
