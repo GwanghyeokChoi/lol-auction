@@ -8,6 +8,7 @@ export interface Player {
     subPos: string;
     most: string[];
     status: 'waiting' | 'bidding' | 'sold' | 'passed';
+    soldPrice?: number;  // 낙찰가 (추가)
 }
 
 export interface Team {

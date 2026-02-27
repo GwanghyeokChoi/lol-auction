@@ -44,9 +44,14 @@ export const Renderer = {
         
         if (!statusEl || !infoEl) return;
 
+        // 경매 종료 여부 확인
+        const allTeamsFull = Object.values(teams).every((t: any) => (t.members?.length || 0) >= 4);
+
         // 상태 메시지 렌더링
         let statusHtml = '';
-        if (live.status === 'resuming') {
+        if (allTeamsFull) {
+            statusHtml = `<span style="color:#c8aa6e">경매가 종료되었습니다.</span>`;
+        } else if (live.status === 'resuming') {
             statusHtml = `<span style="color:#3fb950">퍼즈 해제! 5초 후 재개됩니다.</span>`;
         } else if (live.status === 'cooldown') {
             if (live.highestBidderId) {
@@ -67,7 +72,43 @@ export const Renderer = {
         }
         statusEl.innerHTML = statusHtml;
 
-        // 선수 정보 렌더링
+        // 선수 정보 렌더링 (종료 시 메시지 표시)
+        if (allTeamsFull) {
+            infoEl.innerHTML = `
+                <div style="padding: 40px 0; text-align: center;">
+                    <p style="font-size: 18px; color: #888; line-height: 1.6;">
+                        모든 팀 구성이 완료되었습니다.<br>
+                        방장은 <span style="color: #c8aa6e; font-weight: bold;">결과 다운로드</span> 버튼을 통해 결과를 확인해 주세요.
+                    </p>
+                </div>
+            `;
+            return;
+        }
+
+        // 쿨타임일 때는 결과 화면 표시
+        if (live.status === 'cooldown') {
+            let resultTitle = "";
+            let resultSub = "다음 경매 준비 중...";
+
+            if (live.highestBidderId) {
+                const winner = teams[live.highestBidderId]?.leaderName;
+                resultTitle = `<span style="color:#c8aa6e">${winner}</span> 팀 <span style="color:#fff">${live.highestBid}P</span> 낙찰!`;
+            } else if (live.activePlayerId && players[live.activePlayerId]?.status === 'passed') {
+                resultTitle = `<span style="color:#ff4655">유찰되었습니다.</span>`;
+            } else {
+                resultTitle = "곧 경매가 시작합니다.";
+                resultSub = "준비해 주세요!";
+            }
+
+            infoEl.innerHTML = `
+                <div style="padding: 40px 0; text-align: center;">
+                    <h2 style="font-size: 32px; margin-bottom: 20px;">${resultTitle}</h2>
+                    <p style="font-size: 18px; color: #888;">${resultSub}</p>
+                </div>
+            `;
+            return;
+        }
+
         if (!live.activePlayerId || !players[live.activePlayerId]) {
             infoEl.innerHTML = `<div style="padding: 50px; color: #888;">대기 중인 선수가 없습니다.</div>`;
             return;
@@ -135,11 +176,11 @@ export const Renderer = {
         el.prepend(div); // 최신 로그가 위로 오게
     },
 
-    // 6. 툴팁 HTML 생성 (추가)
+    // 6. 툴팁 HTML 생성
     getTooltipHtml(p: Player): string {
         const highTierColor = getTierColor(p.highTier);
         const currentTierColor = getTierColor(p.currentTier);
-
+        
         return `
             <div style="font-size: 16px; font-weight: bold; margin-bottom: 8px; color: #fff;">
                 ${p.name} <span style="font-size: 13px; color: #888; font-weight: normal;">(${p.nickname})</span>

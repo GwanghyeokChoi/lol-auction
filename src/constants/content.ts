@@ -38,7 +38,7 @@ export const HELP_CONTENT = `
 `;
 
 export const UPDATE_LOG = `
-<h3>🚀 업데이트 내역</h3>
+<h3>🚀 패치노트</h3>
 <ul class="update-list">
     <li>
         <span class="version">v1.3.1</span> <span class="date">2026.02.27</span>

@@ -119,14 +119,7 @@ export const AuctionService = {
         }
 
         // 포인트 체크 (남은 팀원 수 고려)
-        // 남은 슬롯 수 = 4 - 현재 멤버 수
-        // 이번에 낙찰받는다고 가정하면, 남은 슬롯은 (4 - 현재 멤버 수 - 1)명이 됨.
-        // 하지만 "이번 입찰 후 남은 돈"으로 "나머지 인원"을 채울 수 있어야 함.
-        // 즉, (보유 포인트 - 입찰가) >= (4 - 현재 멤버 수 - 1)
-        // 예: 0명 보유(4명 필요). 1000P 보유. 997P 입찰 -> 남은돈 3P. 남은인원 3명. 가능.
-        // 예: 0명 보유. 1000P 보유. 998P 입찰 -> 남은돈 2P. 남은인원 3명. 불가능.
-        
-        const remainingSlotsAfterBid = 4 - currentMembersCount - 1; // 이번 선수 포함해서 1명 채워지므로 -1
+        const remainingSlotsAfterBid = 4 - currentMembersCount - 1; 
         const remainingPoints = teamPoints - nextBid;
 
         if (remainingPoints < remainingSlotsAfterBid) {
@@ -226,6 +219,9 @@ export const AuctionService = {
 
         if (live.highestBidderId) {
             updates[`rooms/${roomId}/players/${live.activePlayerId}/status`] = 'sold';
+            // 낙찰가 저장
+            updates[`rooms/${roomId}/players/${live.activePlayerId}/soldPrice`] = live.highestBid;
+
             const winner = data.teams[live.highestBidderId];
             updates[`rooms/${roomId}/teams/${live.highestBidderId}/points`] = winner.points - live.highestBid;
             
