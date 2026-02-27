@@ -37,6 +37,7 @@ export const HELP_CONTENT = `
 <p><a href="mailto:ewq15651@gmail.com" style="color: #c8aa6e;">ewq15651@gmail.com</a></p>
 `;
 
+
 export const UPDATE_LOG = `
 <h3>🚀 패치노트</h3>
 <ul class="update-list">
