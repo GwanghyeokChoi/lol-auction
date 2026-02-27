@@ -16,6 +16,7 @@ const userRole = urlParams.get('role') || 'viewer';
 let latestData: any = null;
 
 window.addEventListener('DOMContentLoaded', () => {
+    const landingScreen = document.getElementById('landing-screen') as HTMLElement;
     const setupScreen = document.getElementById('setup-screen') as HTMLElement;
     const modalStep1 = document.getElementById('modal-step-1') as HTMLElement;
     const modalStep2 = document.getElementById('modal-step-2') as HTMLElement;
@@ -23,9 +24,31 @@ window.addEventListener('DOMContentLoaded', () => {
     const leaderInputList = document.getElementById('leader-input-list') as HTMLElement;
     const linkArea = document.getElementById('generated-links-area') as HTMLElement;
 
+    // --- [초기 화면 제어] ---
+    if (currentRoomId) {
+        // 방에 입장한 경우: 랜딩/설정 숨기고 경매장 표시
+        if (landingScreen) landingScreen.style.display = 'none';
+        if (setupScreen) setupScreen.style.display = 'none';
+        auctionContainer.style.display = 'grid';
+    } else {
+        // 메인 접속: 랜딩 페이지 표시
+        if (landingScreen) landingScreen.style.display = 'flex';
+        if (setupScreen) setupScreen.style.display = 'none';
+        auctionContainer.style.display = 'none';
+    }
+
     // --- [Header Events] ---
     document.getElementById('site-logo')?.addEventListener('click', () => {
-        window.location.href = window.location.origin + window.location.pathname;
+        // SPA 방식 화면 전환 (새로고침 방지)
+        if (landingScreen) landingScreen.style.display = 'flex';
+        if (setupScreen) setupScreen.style.display = 'none';
+        if (auctionContainer) auctionContainer.style.display = 'none';
+        
+        // URL 파라미터 제거 (메인 URL로 변경)
+        const newUrl = window.location.origin + window.location.pathname;
+        window.history.pushState({ path: newUrl }, '', newUrl);
+        
+        // 필요하다면 여기서 입력 필드 초기화 등을 수행할 수 있음
     });
 
     const helpModal = document.getElementById('help-modal');
@@ -50,6 +73,12 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('btn-close-update')?.addEventListener('click', () => {
         if (updateModal) updateModal.style.display = 'none';
+    });
+
+    // --- [Landing Page Events] ---
+    document.getElementById('btn-go-setup')?.addEventListener('click', () => {
+        if (landingScreen) landingScreen.style.display = 'none';
+        if (setupScreen) setupScreen.style.display = 'flex';
     });
 
 
@@ -202,6 +231,8 @@ window.addEventListener('DOMContentLoaded', () => {
             const pauseBtn = document.getElementById('btn-pause');
 
             if (userRole === 'team_1' && adminZone) {
+                adminZone.style.display = 'block';
+
                 // 모든 팀이 꽉 찼는지 확인
                 const allTeamsFull = Object.values(data.teams).every((t: any) => (t.members?.length || 0) >= 4);
 

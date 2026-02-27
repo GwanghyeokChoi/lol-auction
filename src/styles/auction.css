@@ -64,6 +64,73 @@ body {
     color: #fff;
 }
 
+/* --- [Landing Page] --- */
+#landing-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle, #091428 0%, #010a13 100%);
+    text-align: center;
+}
+
+.landing-content {
+    max-width: 800px;
+    padding: 40px;
+}
+
+.landing-title {
+    font-size: 64px;
+    font-weight: bold;
+    color: #c8aa6e;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 30px rgba(200, 170, 110, 0.3);
+}
+
+.landing-subtitle {
+    font-size: 24px;
+    color: #8b949e;
+    margin-bottom: 50px;
+    line-height: 1.5;
+}
+
+.landing-features {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 60px;
+}
+
+.feature-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    color: #f0e6d2;
+    font-size: 18px;
+}
+
+.feature-icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.landing-btn {
+    font-size: 24px;
+    padding: 20px 60px;
+    border-radius: 50px;
+    background: linear-gradient(135deg, #c8aa6e 0%, #a08248 100%);
+    color: #010a13;
+    border: none;
+    box-shadow: 0 10px 30px rgba(200, 170, 110, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.landing-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 40px rgba(200, 170, 110, 0.4);
+}
+
 /* --- [2. 설정 및 결과 모달] --- */
 .overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -129,12 +196,23 @@ input[type="number"], .leader-name-input {
     border: 1px solid #30363d; color: #fff; border-radius: 4px; font-size: 16px;
 }
 
-.leader-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
-.leader-point-input { width: 100px; text-align: center; }
+/* 숫자 입력칸 스핀 버튼 제거 */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield; /* Firefox */
+}
+
+.leader-row { display: flex; gap: 5px; margin-bottom: 10px; align-items: center; }
+.leader-point-input { width: 60px; text-align: center; } /* 너비 축소 */
 
 .btn-remove-leader {
     background: #7a0019; color: #fff; border: 1px solid #ff4655;
     width: 44px; height: 44px; flex-shrink: 0; border-radius: 4px; font-size: 20px;
+    cursor: pointer;
 }
 
 .scroll-input-area {

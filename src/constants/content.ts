@@ -27,6 +27,11 @@ export const HELP_CONTENT = `
     <li>모든 팀이 4명의 팀원을 채우면 경매가 종료됩니다.</li>
     <li>종료 후 방장은 최종 결과를 엑셀로 다운로드할 수 있습니다.</li>
 </ul>
+
+<hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
+<p><strong>📧 문의 및 건의사항</strong></p>
+<p>서비스 이용 중 불편한 점이나 개선 사항이 있다면 아래 메일로 연락주세요.</p>
+<p><a href="mailto:ewq15651@gmail.com" style="color: #c8aa6e;">ewq15651@gmail.com</a></p>
 `;
 
 export const UPDATE_LOG = `
