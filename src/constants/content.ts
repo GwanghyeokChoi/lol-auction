@@ -42,7 +42,7 @@ export const UPDATE_LOG = `
         <p>- 경매 화면 레이아웃 개선 (통합 카드 형태)</p>
         <p>- 방장 전용 도움말 및 경매장 가이드 툴팁 추가</p>
         <p>- 헤더 및 공통 Footer 적용</p>
-        <p>- 약관 및 개인정보처리방침 내용 구체화</p>
+        <p>- 도움말 및 패치노트 내용 추가</p>
     </li>
     <li>
         <span class="version">v1.2.0</span> <span class="date">2024.02.26</span>
