@@ -870,3 +870,19 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
         font-size: 24px;
     }
 }
+
+/* --- [13. 호버 툴팁 스타일 (동적 위치)] --- */
+.hover-tooltip {
+    position: fixed; /* 화면 기준 배치 */
+    background: #1c1c1f;
+    border: 1px solid #c8aa6e;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    z-index: 10000; /* 최상위 */
+    pointer-events: none; /* 마우스 이벤트 통과 */
+    width: 250px;
+    text-align: left;
+    font-weight: normal;
+    color: #ccc;
+}

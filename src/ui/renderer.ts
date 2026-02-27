@@ -1,6 +1,6 @@
 import type { Player, Team, AuctionState } from "../types";
 
-// 티어별 색상 반환 함수
+// 티어별 색상 반환 함수 (내부 사용)
 const getTierColor = (tier: string): string => {
     if (!tier) return '#fff';
     const t = tier.trim();
@@ -133,5 +133,23 @@ export const Renderer = {
         const time = new Date(log.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         div.innerHTML = `<span style="color:#555; font-size:12px; margin-right:5px;">[${time}]</span> ${log.msg}`;
         el.prepend(div); // 최신 로그가 위로 오게
+    },
+
+    // 6. 툴팁 HTML 생성 (추가)
+    getTooltipHtml(p: Player): string {
+        const highTierColor = getTierColor(p.highTier);
+        const currentTierColor = getTierColor(p.currentTier);
+
+        return `
+            <div style="font-size: 16px; font-weight: bold; margin-bottom: 8px; color: #fff;">
+                ${p.name} <span style="font-size: 13px; color: #888; font-weight: normal;">(${p.nickname})</span>
+            </div>
+            <div style="font-size: 13px; line-height: 1.6; color: #ccc;">
+                <div><span style="color:#888;">최고:</span> <span style="color:${highTierColor}; font-weight:bold;">${p.highTier}</span></div>
+                <div><span style="color:#888;">현재:</span> <span style="color:${currentTierColor}; font-weight:bold;">${p.currentTier}</span></div>
+                <div style="margin-top: 4px;"><span style="color:#888;">주포 / 부포:</span> ${p.mainPos} / ${p.subPos || '-'}</div>
+                <div><span style="color:#888;">Most:</span> ${p.most ? p.most.join(', ') : '-'}</div>
+            </div>
+        `;
     }
 };

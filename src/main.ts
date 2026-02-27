@@ -490,8 +490,63 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 선수 리스트 클릭 위임
-    document.getElementById('player-list')?.addEventListener('click', (e) => {
+    // 선수 리스트 호버/클릭 위임
+    const playerList = document.getElementById('player-list');
+    const hoverTooltip = document.getElementById('player-hover-tooltip');
+
+    // 툴팁 표시 함수
+    const showTooltip = (target: HTMLElement, e: MouseEvent) => {
+        const card = target.closest('.player-card');
+        if (!card || !latestData || !hoverTooltip) return;
+        const playerId = card.getAttribute('data-id');
+        if (!playerId) return;
+
+        const p = latestData.players[playerId];
+        hoverTooltip.innerHTML = Renderer.getTooltipHtml(p);
+        
+        // 위치 조정 (화면 밖으로 나가지 않게)
+        const tooltipWidth = 250; // CSS에서 설정한 너비
+        const tooltipHeight = hoverTooltip.offsetHeight || 150; // 대략적인 높이
+        
+        let left = e.clientX + 15;
+        let top = e.clientY + 15;
+
+        // 오른쪽 끝 체크
+        if (left + tooltipWidth > window.innerWidth) {
+            left = e.clientX - tooltipWidth - 15;
+        }
+
+        // 아래쪽 끝 체크
+        if (top + tooltipHeight > window.innerHeight) {
+            top = e.clientY - tooltipHeight - 15;
+        }
+
+        hoverTooltip.style.left = `${left}px`;
+        hoverTooltip.style.top = `${top}px`;
+        hoverTooltip.style.display = 'block';
+    };
+
+    // 툴팁 숨김 함수
+    const hideTooltip = () => {
+        if (hoverTooltip) hoverTooltip.style.display = 'none';
+    };
+
+    // 호버 이벤트
+    playerList?.addEventListener('mouseover', (e) => {
+        showTooltip(e.target as HTMLElement, e);
+    });
+
+    playerList?.addEventListener('mousemove', (e) => {
+        // 마우스 이동 시 툴팁 따라다니기 (위치 재계산)
+        showTooltip(e.target as HTMLElement, e);
+    });
+
+    playerList?.addEventListener('mouseout', () => {
+        hideTooltip();
+    });
+
+    // 클릭 이벤트 (기존 모달 표시)
+    playerList?.addEventListener('click', (e) => {
         const card = (e.target as HTMLElement).closest('.player-card');
         if (!card || !latestData) return;
         const playerId = card.getAttribute('data-id');

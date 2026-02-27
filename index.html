@@ -23,7 +23,6 @@
   <meta property="twitter:title" content="LOL Auction - 롤 내전 팀 경매">
   <meta property="twitter:description" content="실시간으로 진행되는 롤 내전 팀원 경매 시스템! 지금 바로 시작하세요.">
   <meta property="twitter:image" content="https://lol-auction.co.kr/og-image.png">
-  <script src="src/constants/content.ts"></script>
 </head>
 <body>
 <div id="app">
@@ -121,7 +120,7 @@
     </div>
   </div>
 
-  <!-- 4. 선수 상세 정보 모달 -->
+  <!-- 4. 선수 상세 정보 모달 (클릭 시) -->
   <div id="player-info-modal" class="overlay" style="display: none; z-index: 3000;">
     <div class="modal">
       <button class="btn-close-modal" id="btn-close-player-modal">×</button>
@@ -129,6 +128,9 @@
       <div id="player-modal-detail" style="color: #fff;"></div>
     </div>
   </div>
+
+  <!-- 9. 선수 정보 호버 툴팁 (추가) -->
+  <div id="player-hover-tooltip" class="hover-tooltip" style="display: none;"></div>
 
   <!-- 5. 약관 모달 -->
   <div id="terms-modal" class="overlay" style="display: none; z-index: 4000;">
@@ -157,7 +159,7 @@
 
   <!-- 8. 모바일 접속 경고 오버레이 -->
   <div id="mobile-warning" class="overlay" style="display: none; z-index: 10000; background: rgba(0,0,0,0.8);">
-    <div class="modal" style="text-align: center; width: 80%; max-width: 300px; background: #1c1c1f; border: 1px solid #ff4655; padding: 30px;">
+    <div class="modal" style="text-align: center; width: 80%; max-width: 300px; background: #1c1c1f; border: 1px solid #c8aa6e; padding: 30px;">
       <h2 style="color: #ff4655; margin-bottom: 15px; font-size: 20px;">🖥️ PC 접속 권장</h2>
       <p style="color: #ccc; margin-bottom: 20px; line-height: 1.5; font-size: 14px;">
         원활한 경매 진행을 위해<br>PC 환경에서 접속해 주세요.
