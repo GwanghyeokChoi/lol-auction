@@ -38,28 +38,33 @@ export const UPDATE_LOG = `
 <h3>🚀 업데이트 내역</h3>
 <ul class="update-list">
     <li>
-        <span class="version">v1.3.0</span> <span class="date">2024.02.27</span>
+        <span class="version">v1.3.0</span> <span class="date">2026.02.27</span>
         <p>- 경매 화면 레이아웃 개선 (통합 카드 형태)</p>
         <p>- 방장 전용 도움말 및 경매장 가이드 툴팁 추가</p>
         <p>- 헤더 및 공통 Footer 적용</p>
         <p>- 도움말 및 패치노트 내용 추가</p>
     </li>
     <li>
-        <span class="version">v1.2.0</span> <span class="date">2024.02.26</span>
+        <span class="version">v1.2.0</span> <span class="date">2026.02.26</span>
         <p>- 팀원 정보 및 선수 상세 정보 모달 추가</p>
         <p>- 퍼즈 해제 권한 수정 및 타이머 리셋 기능 추가</p>
         <p>- 경매 종료 조건 및 유찰자 재경매 로직 개선</p>
     </li>
     <li>
-        <span class="version">v1.1.0</span> <span class="date">2024.02.25</span>
+        <span class="version">v1.1.0</span> <span class="date">2026.02.25</span>
         <p>- 퍼즈 기능 추가</p>
         <p>- 직접 입찰 기능 추가</p>
         <p>- UI 레이아웃 개선 (로그 영역 확장)</p>
     </li>
     <li>
-        <span class="version">v1.0.0</span> <span class="date">2024.02.24</span>
-        <p>- 서비스 오픈</p>
+        <span class="version">v1.0.0</span> <span class="date">2026.02.24</span>
+        <p>- 웹 서비스 오픈</p>
         <p>- 실시간 경매 시스템 구축</p>
+    </li>
+    <li>
+        <span class="version">v0.0.0</span> <span class="date">2025.10.16</span>
+        <p>- 디스코드 봇</p>
+        <p>- 턴제 경매 시스템 구축</p>
         <p>- CSV 명단 등록 및 결과 다운로드 기능</p>
     </li>
 </ul>
