@@ -466,7 +466,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     return `<div class="player-card sold">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <strong>${p.name}</strong> 
-                            <small style="background:#333; padding:2px 6px; border-radius:4px;">${p.tier}</small>
+                            <small style="background:#333; padding:2px 6px; border-radius:4px;">${p.currentTier}</small>
                         </div>
                         <div style="font-size:12px; color:#aaa; margin-top:6px; line-height:1.4;">
                             <div>포지션: ${p.mainPos} ${p.subPos ? `/ ${p.subPos}` : ''}</div>
@@ -526,7 +526,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 <div style="margin-bottom:15px; text-align:center; font-size:16px; font-weight:bold; color:${statusColor}; border:1px solid ${statusColor}; padding:8px; border-radius:4px;">
                     ${statusText}
                 </div>
-                <div style="margin-bottom:10px;"><strong>티어:</strong> ${p.tier}</div>
+                <div style="margin-bottom:10px;"><strong>최고 티어:</strong> ${p.highTier}</div>
+                <div style="margin-bottom:10px;"><strong>현재 티어:</strong> ${p.currentTier}</div>
                 <div style="margin-bottom:10px;"><strong>주 포지션:</strong> ${p.mainPos}</div>
             `;
 

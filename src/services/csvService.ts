@@ -11,17 +11,18 @@ export const CSVService = {
                 complete: (res) => {
                     const players: Record<string, Player> = {};
                     res.data.forEach((row: any, i) => {
-                        // 이름,닉네임,티어,주포지션,부포지션,모스트1,모스트2,모스트3
-                        if (row.length < 5) return; // 최소한 부포지션까지는 있어야 함
+                        // 이름,닉네임,최고티어,현재티어,주포지션,부포지션,모스트1,모스트2,모스트3
+                        if (row.length < 5) return; // 최소한 주포지션까지는 있어야 함
                         const id = `p_${i}`;
                         players[id] = {
                             id, 
                             name: row[0]?.trim(), 
                             nickname: row[1]?.trim(), 
-                            tier: row[2]?.trim(),
-                            mainPos: row[3]?.trim(), 
-                            subPos: row[4]?.trim(),
-                            most: [row[5], row[6], row[7]].filter(v => v && v.trim() !== ''),
+                            highTier: row[2]?.trim(),
+                            currentTier: row[3]?.trim(),
+                            mainPos: row[4]?.trim(), 
+                            subPos: row[5]?.trim(),
+                            most: [row[6], row[7], row[8]].filter(v => v && v.trim() !== ''),
                             status: 'waiting'
                         };
                     });

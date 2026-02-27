@@ -11,7 +11,7 @@ export const Renderer = {
             const p = players[id];
             if (!p) return '';
             return `<div class="player-card ${p.status}" data-id="${p.id}">
-                <strong>${p.name}</strong> <small>${p.tier} (${p.mainPos})</small>
+                <strong>${p.name}</strong> <small>${p.currentTier} (${p.mainPos})</small>
             </div>`;
         }).join('');
 
@@ -58,7 +58,10 @@ export const Renderer = {
         infoEl.innerHTML = `
             <span class="p-name">${p.name}</span>
             <span class="p-nick">(${p.nickname})</span>
-            <div class="tier-badge">${p.tier}</div>
+            <div class="tier-badge">
+                <span style="color:#aaa; font-size:0.8em;">최고:</span> ${p.highTier} / 
+                <span style="color:#aaa; font-size:0.8em;">현재:</span> ${p.currentTier}
+            </div>
             <div class="p-info-grid">
                 <div><strong>주 포지션:</strong> ${p.mainPos}</div>
                 <div><strong>부 포지션:</strong> ${p.subPos}</div>
