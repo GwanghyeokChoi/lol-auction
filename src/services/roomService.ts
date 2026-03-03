@@ -24,11 +24,10 @@ export const RoomService = {
 
     // 2. 선수 명단 등록 (CSV 업로드) - 기존 명단 덮어쓰기 및 순서 초기화
     async registerPlayers(roomId: string, players: Record<string, Player>) {
-        const updates: any = {};
-        updates[`rooms/${roomId}/players`] = players;
-        updates[`rooms/${roomId}/live/playerOrder`] = [];
-        
-        await update(ref(db), updates);
+        // players 경로를 통째로 덮어쓰기 (set 사용)
+        await set(ref(db, `rooms/${roomId}/players`), players);
+        // playerOrder 초기화 (set 사용)
+        await set(ref(db, `rooms/${roomId}/live/playerOrder`), []);
     },
 
     // 3. 방장이 '경매 시작' 버튼 클릭 시 랜덤 순서 확정
@@ -68,7 +67,7 @@ export const RoomService = {
     async triggerNextAuction(roomId: string) {
         await update(ref(db, `rooms/${roomId}/live`), {
             status: 'cooldown',
-            nextAuctionTime: Date.now() + 3000 // 최초 시작은 3초 대기
+            nextAuctionTime: Date.now() + 15000 // 최초 시작 대기 시간 15초로 변경
         });
     },
 
