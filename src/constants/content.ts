@@ -16,8 +16,23 @@ export const HELP_CONTENT = `
 
 <p><strong>2. 선수 명단 등록</strong></p>
 <ul>
-    <li>방장(팀장1)은 CSV 파일을 업로드하여 경매 대상 선수를 일괄 등록합니다.</li>
-    <li>CSV 형식은 따로 헤더가 없으며 이름, 닉네임, 최고티어, 현재티어, 주포지션, 부포지션, 모스트1, 모스트2, 모스트3 순서로 작성해 주세요.</li>
+    <li>
+        방장(팀장1)은 두 가지 방식 중 하나를 선택하여 경매 대상 선수를 등록할 수 있습니다.
+    </li>
+    <li>
+        <strong>CSV 파일을 통한 일괄 등록:</strong>
+        <ul>
+            <li>CSV 파일 업로드 시 별도의 헤더(제목 행) 없이 아래 순서대로 작성하여 업로드해 주세요.</li>
+            <li>순서: 이름, 닉네임, 최고티어, 현재티어, 주포지션, 부포지션, 모스트1, 모스트2, 모스트3</li>
+        </ul>
+    </li>
+    <li>
+        <strong>직접 입력을 통한 수동 등록:</strong>
+        <ul>
+            <li>별도의 파일 없이 화면의 입력 폼을 통해 선수 정보를 한 명씩 직접 입력하여 등록할 수 있습니다.</li>
+            <li>소수의 인원을 추가하거나 긴급하게 수정이 필요한 경우 유용합니다.</li>
+        </ul>
+    </li>
 </ul>
 
 <p><strong>3. 경매 진행</strong></p>
@@ -48,6 +63,13 @@ export const HELP_CONTENT = `
 export const UPDATE_LOG = `
 <h3>🚀 패치노트</h3>
 <ul class="update-list">
+
+    <li>
+        <span class="version">v1.4.0</span> <span class="date">2026.03.20</span>
+        <p>- 참가자 명단 수동 등록 기능 추가</p>
+        <p>- 등록된 참가자 개별 삭제 기능 추가</p>
+        <p>- 데이터 관리 편의성을 위한 편집 인터페이스(UI) 최적화</p>
+    </li>
     <li>
         <span class="version">v1.3.2</span> <span class="date">2026.03.03</span>
         <p>- 반응형 디자인 적용</p>

@@ -1,6 +1,6 @@
 import './styles/auction.css';
 import { db } from './firebase';
-import { ref, onValue, onChildAdded } from 'firebase/database';
+import { ref, onValue, onChildAdded, update } from 'firebase/database';
 import { AuctionService } from './services/auctionService';
 import { RoomService } from './services/roomService';
 import { Renderer } from './ui/renderer';
@@ -195,9 +195,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // --- [실시간 경매 로직] ---
     if (currentRoomId) {
-        setupScreen.style.display = 'none';
-        auctionContainer.style.display = 'grid';
-
         // 접속 상태 알림 시작 (팀장인 경우만)
         if (userRole !== 'viewer') {
             RoomService.connectToRoom(currentRoomId, userRole);
@@ -231,7 +228,7 @@ window.addEventListener('DOMContentLoaded', () => {
             latestData = data; // 최신 데이터 저장
 
             // Renderer 호출
-            Renderer.renderPlayerList(data.players || {}, data.live.playerOrder || []);
+            Renderer.renderPlayerList(data.players || {}, data.live.playerOrder || [], userRole, data.live.status);
             Renderer.renderStage(data.live, data.players || {}, data.teams || {});
             Renderer.renderTeams(data.teams || {}, userRole);
             Renderer.renderStats(data.players || {});
@@ -239,48 +236,74 @@ window.addEventListener('DOMContentLoaded', () => {
             const adminZone = document.getElementById('admin-controls');
             const btnUpload = document.getElementById('btn-upload-csv');
             const btnStart = document.getElementById('btn-start-auction');
-            const btnDownload = document.getElementById('btn-download-result');
+            // 다운로드 버튼은 admin-controls에서 제거하고 bidding-controls 내부로 이동했으므로 주석 처리 또는 무시
+            // const btnDownload = document.getElementById('btn-download-result'); 
             const resumeBtn = document.getElementById('btn-resume-auction');
             const pauseBtn = document.getElementById('btn-pause');
+            
+            // 새로운 위치의 다운로드 버튼
+            const downloadBtnNew = document.getElementById('btn-download-result');
 
-            if (userRole === 'team_1' && adminZone) {
-                adminZone.style.display = 'block';
-
-                // 모든 팀이 꽉 찼는지 확인
-                const allTeamsFull = Object.values(data.teams).every((t: any) => (t.members?.length || 0) >= 4);
-
-                if (allTeamsFull) {
-                    // 경매 종료 상태 -> adminZone 보임 (다운로드 버튼)
-                    adminZone.style.display = 'block';
-                    if (btnUpload) btnUpload.style.display = 'none';
-                    if (btnStart) btnStart.style.display = 'none';
-                    if (btnDownload) btnDownload.style.display = 'inline-block';
-                } else if (data.live.status !== 'idle') {
-                    // 경매 진행 중 -> adminZone 숨김 (일반 팀장과 동일한 UI)
-                    adminZone.style.display = 'none';
+            // 방장 전용 참가자 수동 추가 버튼 표시
+            const addPlayerZone = document.getElementById('admin-add-player-zone');
+            if (userRole === 'team_1' && addPlayerZone) {
+                // 경매 시작 전(idle)에만 수동 추가 허용
+                if (data.live.status === 'idle') {
+                    addPlayerZone.style.display = 'block';
                 } else {
-                    // 경매 대기 중 -> adminZone 보임 (시작 버튼)
-                    adminZone.style.display = 'block';
-                    if (btnUpload) btnUpload.style.display = 'inline-block';
-                    if (btnStart) btnStart.style.display = 'inline-block';
-                    if (btnDownload) btnDownload.style.display = 'none';
+                    addPlayerZone.style.display = 'none';
                 }
             }
 
-            // 재개 버튼 표시 로직
-            if (data.live.status === 'paused') {
+            // 모든 팀이 꽉 찼는지 확인 (경매 종료 여부)
+            const allTeamsFull = Object.values(data.teams).every((t: any) => (t.members?.length || 0) >= 4);
+
+            if (allTeamsFull) {
+                // --- [경매 종료 상태] ---
+                // 1. 퍼즈/재개 버튼 숨김
                 if (pauseBtn) pauseBtn.style.display = 'none';
-                if (resumeBtn) {
-                    // 퍼즈 건 본인만 표시 (방장 예외 제거)
-                    if (userRole === data.live.pausedBy) {
-                        resumeBtn.style.display = 'inline-block';
-                    } else {
-                        resumeBtn.style.display = 'none';
-                    }
+                if (resumeBtn) resumeBtn.style.display = 'none';
+
+                // 2. 결과 다운로드 버튼 표시 (방장만)
+                if (userRole === 'team_1') {
+                    if (downloadBtnNew) downloadBtnNew.style.display = 'block'; // block으로 넓게 표시
+                    if (adminZone) adminZone.style.display = 'none'; // admin-controls 완전 숨김
+                } else {
+                    if (downloadBtnNew) downloadBtnNew.style.display = 'none';
                 }
             } else {
-                if (pauseBtn) pauseBtn.style.display = 'inline-block';
-                if (resumeBtn) resumeBtn.style.display = 'none';
+                // --- [경매 진행 중 또는 대기 중] ---
+                // 1. 결과 다운로드 버튼 숨김
+                if (downloadBtnNew) downloadBtnNew.style.display = 'none';
+
+                // 2. 방장 컨트롤 (업로드/시작)
+                if (userRole === 'team_1' && adminZone) {
+                    if (data.live.status !== 'idle') {
+                        // 진행 중 -> 숨김
+                        adminZone.style.display = 'none';
+                    } else {
+                        // 대기 중 -> 보임
+                        adminZone.style.display = 'block';
+                        if (btnUpload) btnUpload.style.display = 'inline-block';
+                        if (btnStart) btnStart.style.display = 'inline-block';
+                    }
+                }
+
+                // 3. 퍼즈/재개 버튼 표시 로직
+                if (data.live.status === 'paused') {
+                    if (pauseBtn) pauseBtn.style.display = 'none';
+                    if (resumeBtn) {
+                        // 퍼즈 건 본인만 표시
+                        if (userRole === data.live.pausedBy) {
+                            resumeBtn.style.display = 'inline-block';
+                        } else {
+                            resumeBtn.style.display = 'none';
+                        }
+                    }
+                } else {
+                    if (pauseBtn) pauseBtn.style.display = 'inline-block';
+                    if (resumeBtn) resumeBtn.style.display = 'none';
+                }
             }
         });
 
@@ -418,6 +441,165 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- [수동 참가자 추가 로직] ---
+    const addPlayerModal = document.getElementById('add-player-modal');
+
+    document.getElementById('btn-open-add-player')?.addEventListener('click', () => {
+        if (addPlayerModal) addPlayerModal.style.display = 'flex';
+    });
+
+    document.getElementById('btn-close-add-player')?.addEventListener('click', () => {
+        if (addPlayerModal) addPlayerModal.style.display = 'none';
+    });
+
+    document.getElementById('btn-submit-add-player')?.addEventListener('click', async () => {
+        const name = (document.getElementById('add-p-name') as HTMLInputElement).value.trim();
+        const nick = (document.getElementById('add-p-nick') as HTMLInputElement).value.trim();
+        const highTier = (document.getElementById('add-p-high-tier') as HTMLInputElement).value.trim();
+        const currTier = (document.getElementById('add-p-curr-tier') as HTMLInputElement).value.trim();
+        const mainPos = (document.getElementById('add-p-main-pos') as HTMLInputElement).value.trim();
+        const subPos = (document.getElementById('add-p-sub-pos') as HTMLInputElement).value.trim();
+        const mostStr = (document.getElementById('add-p-most') as HTMLInputElement).value.trim();
+
+        if (!name || !nick || !highTier || !currTier || !mainPos) {
+            return alert("필수 항목(*표시)을 입력해주세요.");
+        }
+
+        const most = mostStr.split(',').map(s => s.trim()).filter(Boolean);
+
+        if (!latestData || !currentRoomId) return;
+
+        // 새로운 고유 ID 생성 (p_현재시간_랜덤)
+        const newId = `p_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+        const newPlayer = {
+            id: newId,
+            name,
+            nickname: nick,
+            highTier,
+            currentTier: currTier,
+            mainPos,
+            subPos,
+            most,
+            status: 'waiting'
+        };
+
+        try {
+            // 새 선수 추가 및 playerOrder 갱신
+            const currentPlayers = latestData.players || {};
+            currentPlayers[newId] = newPlayer;
+            await RoomService.registerPlayers(currentRoomId, currentPlayers);
+
+            // 모달 닫기 및 입력칸 초기화
+            if (addPlayerModal) addPlayerModal.style.display = 'none';
+            document.querySelectorAll('#add-player-modal input').forEach(input => (input as HTMLInputElement).value = '');
+            alert("참가자가 추가되었습니다.");
+        } catch (error) {
+            console.error(error);
+            alert("참가자 추가에 실패했습니다.");
+        }
+    });
+
+    // --- [참가자 삭제 위임] ---
+    // Renderer에서 렌더링 시 삭제 버튼을 추가하고 여기서 처리합니다.
+    document.getElementById('player-list')?.addEventListener('click', async (e) => {
+        const target = e.target as HTMLElement;
+
+        // 삭제 버튼 클릭 시
+        if (target.classList.contains('btn-delete-player')) {
+            e.stopPropagation(); // 모달 뜨는 것 방지
+
+            if (userRole !== 'team_1' || latestData?.live?.status !== 'idle') {
+                return alert("경매 대기 중에만 방장이 삭제할 수 있습니다.");
+            }
+
+            const playerId = target.getAttribute('data-id');
+            if (!playerId || !currentRoomId || !latestData) return;
+
+            if (confirm("정말 이 참가자를 삭제하시겠습니까?")) {
+                try {
+                    // Firebase에서 특정 필드 삭제는 null을 업데이트하거나 remove 함수 사용
+                    // 여기서는 update를 사용하여 여러 경로 동시 처리
+                    const updates: any = {};
+                    updates[`rooms/${currentRoomId}/players/${playerId}`] = null;
+
+                    // playerOrder에서도 제거해야 함 (대기 상태이므로 Order가 비어있을 수도 있지만 안전을 위해)
+                    const currentOrder = latestData.live.playerOrder || [];
+                    const newOrder = currentOrder.filter((id: string) => id !== playerId);
+                    updates[`rooms/${currentRoomId}/live/playerOrder`] = newOrder;
+
+                    await update(ref(db), updates);
+                } catch (error) {
+                    console.error("Delete player error:", error);
+                    alert("삭제 실패");
+                }
+            }
+            return; // 삭제 로직 탔으면 종료
+        }
+
+        // --- 기존 호버 툴팁 / 클릭 모달 로직 ---
+        const card = target.closest('.player-card');
+        if (!card || !latestData) return;
+        const playerId = card.getAttribute('data-id');
+        if (!playerId) return;
+
+        const p = latestData.players[playerId];
+        const isStarted = latestData.live.status !== 'idle';
+
+        const modal = document.getElementById('player-info-modal');
+        const name = document.getElementById('player-modal-name');
+        const detail = document.getElementById('player-modal-detail');
+
+        if (modal && name && detail) {
+            name.innerText = `${p.name} (${p.nickname})`;
+
+            let statusText = '';
+            let statusColor = '#fff';
+
+            if (p.status === 'sold') {
+                const teams = latestData.teams;
+                let soldTeamName = '알 수 없음';
+                for (const tid in teams) {
+                    if (teams[tid].members && teams[tid].members.includes(playerId)) {
+                        soldTeamName = teams[tid].leaderName;
+                        break;
+                    }
+                }
+                statusText = `낙찰됨 - ${soldTeamName} 팀`;
+                statusColor = '#c8aa6e';
+            } else if (p.status === 'passed') {
+                statusText = '유찰됨';
+                statusColor = '#ff4655';
+            } else if (p.status === 'bidding') {
+                statusText = '현재 경매 진행 중 🔥';
+                statusColor = '#00bcff';
+            } else {
+                statusText = '경매 대기 중';
+                statusColor = '#888';
+            }
+
+            let infoHtml = `
+                <div style="margin-bottom:15px; text-align:center; font-size:16px; font-weight:bold; color:${statusColor}; border:1px solid ${statusColor}; padding:8px; border-radius:4px;">
+                    ${statusText}
+                </div>
+                <div style="margin-bottom:10px;"><strong>최고 티어:</strong> ${p.highTier}</div>
+                <div style="margin-bottom:10px;"><strong>현재 티어:</strong> ${p.currentTier}</div>
+                <div style="margin-bottom:10px;"><strong>주 포지션:</strong> ${p.mainPos}</div>
+            `;
+
+            if (isStarted) {
+                infoHtml += `
+                    <div style="margin-bottom:10px;"><strong>부 포지션:</strong> ${p.subPos}</div>
+                    <div><strong>Most:</strong> ${p.most.join(', ')}</div>
+                `;
+            } else {
+                infoHtml += `<div style="color:#888; margin-top:20px; text-align:center;">🔒 경매가 시작되면 상세 정보가 공개됩니다.</div>`;
+            }
+
+            detail.innerHTML = infoHtml;
+            modal.style.display = 'flex';
+        }
+    });
+
     // --- [모달 이벤트 핸들러] ---
     document.getElementById('btn-close-team-modal')?.addEventListener('click', () => {
         document.getElementById('team-detail-modal')!.style.display = 'none';
@@ -490,12 +672,13 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 선수 리스트 호버/클릭 위임
-    const playerList = document.getElementById('player-list');
+    // 선수 리스트 호버 툴팁 위임
     const hoverTooltip = document.getElementById('player-hover-tooltip');
 
-    // 툴팁 표시 함수
     const showTooltip = (target: HTMLElement, e: MouseEvent) => {
+        // 삭제 버튼 위에 있을 때는 툴팁 안 띄움
+        if (target.classList.contains('btn-delete-player')) return;
+
         const card = target.closest('.player-card');
         if (!card || !latestData || !hoverTooltip) return;
         const playerId = card.getAttribute('data-id');
@@ -504,19 +687,15 @@ window.addEventListener('DOMContentLoaded', () => {
         const p = latestData.players[playerId];
         hoverTooltip.innerHTML = Renderer.getTooltipHtml(p);
         
-        // 위치 조정 (화면 밖으로 나가지 않게)
-        const tooltipWidth = 250; // CSS에서 설정한 너비
-        const tooltipHeight = hoverTooltip.offsetHeight || 150; // 대략적인 높이
+        const tooltipWidth = 250;
+        const tooltipHeight = hoverTooltip.offsetHeight || 150;
         
         let left = e.clientX + 15;
         let top = e.clientY + 15;
 
-        // 오른쪽 끝 체크
         if (left + tooltipWidth > window.innerWidth) {
             left = e.clientX - tooltipWidth - 15;
         }
-
-        // 아래쪽 끝 체크
         if (top + tooltipHeight > window.innerHeight) {
             top = e.clientY - tooltipHeight - 15;
         }
@@ -526,87 +705,22 @@ window.addEventListener('DOMContentLoaded', () => {
         hoverTooltip.style.display = 'block';
     };
 
-    // 툴팁 숨김 함수
     const hideTooltip = () => {
         if (hoverTooltip) hoverTooltip.style.display = 'none';
     };
 
-    // 호버 이벤트
-    playerList?.addEventListener('mouseover', (e) => {
+    const playerListEl = document.getElementById('player-list');
+    playerListEl?.addEventListener('mouseover', (e) => {
         showTooltip(e.target as HTMLElement, e);
     });
 
-    playerList?.addEventListener('mousemove', (e) => {
-        // 마우스 이동 시 툴팁 따라다니기 (위치 재계산)
-        showTooltip(e.target as HTMLElement, e);
-    });
-
-    playerList?.addEventListener('mouseout', () => {
-        hideTooltip();
-    });
-
-    // 클릭 이벤트 (기존 모달 표시)
-    playerList?.addEventListener('click', (e) => {
-        const card = (e.target as HTMLElement).closest('.player-card');
-        if (!card || !latestData) return;
-        const playerId = card.getAttribute('data-id');
-        if (!playerId) return;
-
-        const p = latestData.players[playerId];
-        const isStarted = latestData.live.status !== 'idle';
-
-        const modal = document.getElementById('player-info-modal');
-        const name = document.getElementById('player-modal-name');
-        const detail = document.getElementById('player-modal-detail');
-
-        if (modal && name && detail) {
-            name.innerText = `${p.name} (${p.nickname})`;
-            
-            let statusText = '';
-            let statusColor = '#fff';
-
-            if (p.status === 'sold') {
-                const teams = latestData.teams;
-                let soldTeamName = '알 수 없음';
-                for (const tid in teams) {
-                    if (teams[tid].members && teams[tid].members.includes(playerId)) {
-                        soldTeamName = teams[tid].leaderName;
-                        break;
-                    }
-                }
-                statusText = `낙찰됨 - ${soldTeamName} 팀`;
-                statusColor = '#c8aa6e';
-            } else if (p.status === 'passed') {
-                statusText = '유찰됨';
-                statusColor = '#ff4655';
-            } else if (p.status === 'bidding') {
-                statusText = '현재 경매 진행 중 🔥';
-                statusColor = '#00bcff';
-            } else {
-                statusText = '경매 대기 중';
-                statusColor = '#888';
-            }
-
-            let infoHtml = `
-                <div style="margin-bottom:15px; text-align:center; font-size:16px; font-weight:bold; color:${statusColor}; border:1px solid ${statusColor}; padding:8px; border-radius:4px;">
-                    ${statusText}
-                </div>
-                <div style="margin-bottom:10px;"><strong>최고 티어:</strong> ${p.highTier}</div>
-                <div style="margin-bottom:10px;"><strong>현재 티어:</strong> ${p.currentTier}</div>
-                <div style="margin-bottom:10px;"><strong>주 포지션:</strong> ${p.mainPos}</div>
-            `;
-
-            if (isStarted) {
-                infoHtml += `
-                    <div style="margin-bottom:10px;"><strong>부 포지션:</strong> ${p.subPos}</div>
-                    <div><strong>Most:</strong> ${p.most.join(', ')}</div>
-                `;
-            } else {
-                infoHtml += `<div style="color:#888; margin-top:20px; text-align:center;">🔒 경매가 시작되면 상세 정보가 공개됩니다.</div>`;
-            }
-
-            detail.innerHTML = infoHtml;
-            modal.style.display = 'flex';
+    playerListEl?.addEventListener('mousemove', (e) => {
+        if (hoverTooltip && hoverTooltip.style.display === 'block') {
+            showTooltip(e.target as HTMLElement, e); // 위치 업데이트용 호출 재활용 가능
         }
+    });
+
+    playerListEl?.addEventListener('mouseout', () => {
+        hideTooltip();
     });
 });
