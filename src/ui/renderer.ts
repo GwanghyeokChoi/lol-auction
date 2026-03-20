@@ -20,16 +20,29 @@ const getTierColor = (tier: string): string => {
 
 export const Renderer = {
     // 1. 좌측 플레이어 리스트 (경매 순서)
-    renderPlayerList(players: Record<string, Player>, order: string[]) {
+    renderPlayerList(players: Record<string, Player>, order: string[], userRole: string, auctionStatus: string) {
         const el = document.getElementById('player-list');
         if (!el) return;
 
-        const sortedIds = order.length > 0 ? order : Object.keys(players);
-        const listHtml = sortedIds.map(id => {
+        // order 배열에 없는 새로 추가된 선수들을 맨 뒤에 추가
+        const addedPlayerIds = Object.keys(players).filter(id => !order.includes(id));
+        const allPlayerIds = [...order, ...addedPlayerIds];
+
+        const listHtml = allPlayerIds.map(id => {
             const p = players[id];
             if (!p) return '';
             const tierColor = getTierColor(p.currentTier);
+            
+            // 방장이고 경매 시작 전일 때만 삭제 버튼 표시
+            let deleteBtn = '';
+            if (userRole === 'team_1' && auctionStatus === 'idle') {
+                deleteBtn = `<button class="btn-delete-player" data-id="${p.id}" style="
+                    background: transparent; border: none; color: #ff4655; font-size: 16px; 
+                    cursor: pointer; padding: 0 5px; float: right;">×</button>`;
+            }
+
             return `<div class="player-card ${p.status}" data-id="${p.id}">
+                ${deleteBtn}
                 <strong>${p.name}</strong> <small style="color:${tierColor}">${p.currentTier}</small> <small>(${p.mainPos})</small>
             </div>`;
         }).join('');

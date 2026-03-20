@@ -23,6 +23,8 @@
   <meta property="twitter:title" content="LOL Auction - 롤 내전 팀 경매">
   <meta property="twitter:description" content="실시간으로 진행되는 롤 내전 팀원 경매 시스템! 지금 바로 시작하세요.">
   <meta property="twitter:image" content="https://lol-auction.co.kr/og-image.png">
+  <link rel="stylesheet" href="src/styles/auction.css">
+    <script src="src/constants/terms.ts"></script>
 </head>
 <body>
 <div id="app">
@@ -129,7 +131,50 @@
     </div>
   </div>
 
-  <!-- 9. 선수 정보 호버 툴팁 (추가) -->
+  <!-- 수동 플레이어 추가 모달 -->
+  <div id="add-player-modal" class="overlay" style="display: none; z-index: 3500;">
+    <div class="modal" style="max-width: 400px;">
+        <button class="btn-close-modal" id="btn-close-add-player">×</button>
+        <h2 style="color: #c8aa6e; text-align: center; margin-bottom: 20px;">참가자 수동 등록</h2>
+
+        <div class="input-group">
+            <label>이름 <span style="color:#ff4655">*</span></label>
+            <input type="text" id="add-p-name" class="bid-input" style="width: 100%; margin-bottom: 10px;" required>
+
+            <label>닉네임 <span style="color:#ff4655">*</span></label>
+            <input type="text" id="add-p-nick" class="bid-input" style="width: 100%; margin-bottom: 10px;">
+
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <div style="flex: 1;">
+                    <label>최고 티어 <span style="color:#ff4655">*</span></label>
+                    <input type="text" id="add-p-high-tier" class="bid-input" style="width: 100%;" required>
+                </div>
+                <div style="flex: 1;">
+                    <label>현재 티어 <span style="color:#ff4655">*</span></label>
+                    <input type="text" id="add-p-curr-tier" class="bid-input" style="width: 100%;" required>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <div style="flex: 1;">
+                    <label>주 포지션 <span style="color:#ff4655">*</span></label>
+                    <input type="text" id="add-p-main-pos" class="bid-input" style="width: 100%;" required>
+                </div>
+                <div style="flex: 1;">
+                    <label>부 포지션</label>
+                    <input type="text" id="add-p-sub-pos" class="bid-input" style="width: 100%;">
+                </div>
+            </div>
+
+            <label>모스트 챔피언 (콤마로 구분)</label>
+            <input type="text" id="add-p-most" class="bid-input" style="width: 100%; margin-bottom: 20px;" placeholder="예: 아리, 제드, 르블랑">
+
+            <button id="btn-submit-add-player" class="btn-primary">등록하기</button>
+        </div>
+    </div>
+  </div>
+
+  <!-- 9. 선수 정보 호버 툴팁 -->
   <div id="player-hover-tooltip" class="hover-tooltip" style="display: none;"></div>
 
   <!-- 5. 약관 모달 -->
@@ -174,6 +219,10 @@
     <div class="sidebar left-sidebar">
       <div id="player-list" class="scroll-area">
         <!-- Renderer.renderPlayerList() -->
+      </div>
+      <!-- 방장용 수동 참가자 추가 버튼 -->
+      <div id="admin-add-player-zone" style="display: none; padding: 10px; border-top: 1px solid #333; text-align: center;">
+          <button id="btn-open-add-player" class="btn-secondary" style="width: 100%; padding: 8px;">+ 참가자 수동 추가</button>
       </div>
     </div>
 
@@ -248,8 +297,6 @@
                     <input type="file" id="csv-upload" accept=".csv" style="display:none">
                     <button id="btn-upload-csv" class="btn-secondary">📂 명단 등록 (CSV)</button>
                     <button id="btn-start-auction" class="btn-primary">🚀 경매 시작</button>
-                    <!-- 결과 다운로드 버튼 (여기로 이동) -->
-                    <button id="btn-download-result" class="btn-primary" style="display:none; background:#238636; border-color:#2ea043; width: 100%;">📥 결과 다운로드</button>
                   </div>
                 </div>
             </div>
