@@ -38,7 +38,7 @@ export const RoomService = {
         const playerIds = Object.keys(data.players || {});
         const leaderIds = Object.keys(data.teams || {});
 
-        if (playerIds.length === 0) return alert("선수 명단(CSV)을 먼저 등록해주세요.");
+        if (playerIds.length === 0) return alert("선수 명단을 먼저 등록해주세요.");
 
         // 최소 인원 체크 (팀당 4명 필요)
         const requiredPlayers = leaderIds.length * 4;
