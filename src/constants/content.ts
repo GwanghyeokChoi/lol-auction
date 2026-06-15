@@ -63,7 +63,11 @@ export const HELP_CONTENT = `
 export const UPDATE_LOG = `
 <h3>🚀 패치노트</h3>
 <ul class="update-list">
-
+    <li>
+        <span class="version">v1.4.1</span> <span class="date">2026.06.15</span>
+        <p>- 참가자 명단 수동 등록 시 티어 및 포지션 Select Box 선택 기능 추가</p>
+        <p>- 데이터 입력 편의성 및 관리 인터페이스(UI) 최적화</p>
+    </li>
     <li>
         <span class="version">v1.4.0</span> <span class="date">2026.03.20</span>
         <p>- 참가자 명단 수동 등록 기능 추가</p>

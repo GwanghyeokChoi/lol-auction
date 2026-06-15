@@ -147,22 +147,36 @@
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <div style="flex: 1;">
                     <label>최고 티어 <span style="color:#ff4655">*</span></label>
-                    <input type="text" id="add-p-high-tier" class="bid-input" style="width: 100%;" required placeholder="예: 에메랄드1">
+                    <div class="searchable-select-container">
+                        <input type="text" id="add-p-high-tier" class="searchable-select-input bid-input" placeholder="티어 검색 또는 선택" required>
+                        <div class="tier-dropdown-list-container">
+                            <ul class="tier-dropdown-list"></ul>
+                        </div>
+                    </div>
                 </div>
                 <div style="flex: 1;">
                     <label>현재 티어 <span style="color:#ff4655">*</span></label>
-                    <input type="text" id="add-p-curr-tier" class="bid-input" style="width: 100%;" required placeholder="예: 플래티넘3">
+                    <div class="searchable-select-container">
+                        <input type="text" id="add-p-curr-tier" class="searchable-select-input bid-input" placeholder="티어 검색 또는 선택" required>
+                        <div class="tier-dropdown-list-container">
+                            <ul class="tier-dropdown-list"></ul>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <div style="flex: 1;">
                     <label>주 포지션 <span style="color:#ff4655">*</span></label>
-                    <input type="text" id="add-p-main-pos" class="bid-input" style="width: 100%;" required>
+                    <select id="add-p-main-pos" class="bid-input" style="width: 100%;" required>
+                        <option value="" disabled selected>포지션 선택</option>
+                    </select>
                 </div>
                 <div style="flex: 1;">
                     <label>부 포지션</label>
-                    <input type="text" id="add-p-sub-pos" class="bid-input" style="width: 100%;">
+                    <select id="add-p-sub-pos" class="bid-input" style="width: 100%;">
+                        <option value="">선택 없음</option>
+                    </select>
                 </div>
             </div>
 
