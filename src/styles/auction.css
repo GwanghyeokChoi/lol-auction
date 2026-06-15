@@ -202,10 +202,21 @@ body {
 .input-group { margin-bottom: 20px; }
 .input-group label { display: block; margin-bottom: 8px; color: #c8aa6e; font-weight: bold; }
 
-input[type="number"], .leader-name-input {
+/* 모든 입력칸, 셀렉트 박스의 공통 테두리 스타일 지정 (옵션 B 적용) */
+input[type="number"], .leader-name-input, .bid-input, select.bid-input, .searchable-select-input {
     width: 100%; padding: 14px; background: #0d1117;
-    border: 1px solid #30363d; color: #fff; border-radius: 4px; font-size: 16px;
+    border: 1px solid #c8aa6e; /* 테두리 색상 통일 (옵션 B) */
+    color: #fff; border-radius: 4px; font-size: 16px;
+    transition: box-shadow 0.2s, border-color 0.2s; /* 포커스 애니메이션 */
+    outline: none; /* 기본 아웃라인 제거 */
 }
+
+/* 포커스 및 활성화 상태 동기화 */
+input[type="number"]:focus, .leader-name-input:focus, .bid-input:focus, select.bid-input:focus, .searchable-select-input:focus {
+    border-color: #f0e6d2; /* 포커스 시 밝은 색으로 변경 */
+    box-shadow: 0 0 8px rgba(200, 170, 110, 0.5); /* 은은한 골드빛 글로우 효과 */
+}
+
 
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
@@ -215,6 +226,37 @@ input[type="number"]::-webkit-inner-spin-button {
 input[type="number"] {
     -moz-appearance: textfield;
 }
+
+/* select 요소 특별 처리 (브라우저 기본 스타일 제거) */
+select.bid-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"><path fill="%23c8aa6e" d="M7 10l5 5 5-5z"/></svg>'); /* 드롭다운 화살표 골드색 */
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+}
+
+/* bid-input 중 크기 작게 쓸 녀석들용 (원래 bid-input 스타일 덮어쓰기 위해 padding 조절) */
+#custom-bid-input.bid-input {
+    padding: 8px;
+    font-size: 14px;
+}
+
+/* 수동 참가자 등록 모달 등에서 쓰는 .bid-input */
+.bid-input {
+   padding: 10px; /* 원래 14px 에서 10px로 약간 줄임 (디자인 밸런스) */
+   font-size: 14px;
+}
+select.bid-input {
+    padding: 10px;
+    font-size: 14px;
+}
+.searchable-select-input {
+    padding: 10px;
+    font-size: 14px;
+}
+
 
 .leader-row { display: flex; gap: 5px; margin-bottom: 10px; align-items: center; }
 .leader-point-input { width: 60px; text-align: center; }
@@ -472,17 +514,7 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     gap: 5px;
 }
 
-.bid-input {
-    flex: 1;
-    padding: 8px;
-    background: #0d1117;
-    border: 1px solid #30363d;
-    color: #fff;
-    border-radius: 4px;
-    font-size: 14px;
-    text-align: center;
-    min-width: 0;
-}
+/* .bid-input 은 위로 이동됨 */
 
 .bid-submit-btn {
     width: auto;
@@ -908,4 +940,50 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     text-align: left;
     font-weight: normal;
     color: #ccc;
+}
+
+/* --- [14. 검색형 셀렉트 박스 스타일] --- */
+.searchable-select-container {
+    position: relative;
+}
+
+/* .searchable-select-input 은 공통 입력칸으로 스타일 통합 */
+
+.tier-dropdown-list-container {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: #1c1c1f;
+    border: 1px solid #c8aa6e;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    z-index: 4000;
+    max-height: 200px;
+    overflow-y: auto;
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+.tier-dropdown-list-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.tier-dropdown-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.tier-dropdown-list li {
+    padding: 10px;
+    cursor: pointer;
+    color: #f0e6d2;
+    font-size: 14px;
+}
+
+.tier-dropdown-list li:hover {
+    background: #c8aa6e;
+    color: #010a13;
 }

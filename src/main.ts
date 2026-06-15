@@ -20,6 +20,9 @@ let latestData: any = null;
 TimerUtils.initServerTimeOffset();
 
 window.addEventListener('DOMContentLoaded', () => {
+    // 모달 옵션 동적 생성
+    Renderer.populateSelectOptions();
+
     const landingScreen = document.getElementById('landing-screen') as HTMLElement;
     const setupScreen = document.getElementById('setup-screen') as HTMLElement;
     const modalStep1 = document.getElementById('modal-step-1') as HTMLElement;

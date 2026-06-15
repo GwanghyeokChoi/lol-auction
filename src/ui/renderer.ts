@@ -1,5 +1,18 @@
 import type { Player, Team, AuctionState } from "../types";
 
+const TIERS = [
+    '언랭크', '챌린저', '그랜드마스터', '마스터', 
+    '다이아1', '다이아2', '다이아3', '다이아4', 
+    '에메랄드1', '에메랄드2', '에메랄드3', '에메랄드4',
+    '플래티넘1', '플래티넘2', '플래티넘3', '플래티넘4',
+    '골드1', '골드2', '골드3', '골드4',
+    '실버1', '실버2', '실버3', '실버4',
+    '브론즈1', '브론즈2', '브론즈3', '브론즈4',
+    '아이언1', '아이언2', '아이언3', '아이언4'
+];
+
+const POSITIONS = ['탑', '정글', '미드', '원딜', '서폿'];
+
 // 티어별 색상 반환 함수 (내부 사용)
 const getTierColor = (tier: string): string => {
     if (!tier) return '#fff';
@@ -18,7 +31,75 @@ const getTierColor = (tier: string): string => {
     return '#fff'; // 기본값
 };
 
+// 검색 가능한 셀렉트 박스 초기화 함수
+const setupSearchableSelect = (inputId: string, containerClass: string, data: string[]) => {
+    const input = document.getElementById(inputId) as HTMLInputElement;
+    const dropdownContainer = input.nextElementSibling as HTMLElement;
+    // containerClass가 유효하면 검증 용도로 사용할 수 있으나 현재 구조에서는 nextElementSibling이 컨테이너임
+    // 경고를 해결하기 위해 클래스명을 콘솔에 찍거나 검증에 사용 (여기서는 단순 확인)
+    if (!dropdownContainer.classList.contains(containerClass)) {
+        console.warn(`Dropdown container missing class: ${containerClass}`);
+    }
+
+    const dropdownList = dropdownContainer.querySelector('ul') as HTMLUListElement;
+
+    const populateList = (filter = '') => {
+        dropdownList.innerHTML = '';
+        const filteredData = data.filter(item => item.toLowerCase().includes(filter.toLowerCase()));
+        filteredData.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            li.addEventListener('click', () => {
+                input.value = item;
+                dropdownContainer.style.display = 'none';
+            });
+            dropdownList.appendChild(li);
+        });
+    };
+
+    input.addEventListener('focus', () => {
+        populateList();
+        dropdownContainer.style.display = 'block';
+    });
+
+    input.addEventListener('input', () => {
+        populateList(input.value);
+        dropdownContainer.style.display = 'block';
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!input.contains(e.target as Node) && !dropdownContainer.contains(e.target as Node)) {
+            dropdownContainer.style.display = 'none';
+        }
+    });
+};
+
+
 export const Renderer = {
+    // 0. 모달 셀렉트 옵션 동적 생성
+    populateSelectOptions() {
+        // 티어 검색형 셀렉트 박스 초기화
+        setupSearchableSelect('add-p-high-tier', 'tier-dropdown-list-container', TIERS);
+        setupSearchableSelect('add-p-curr-tier', 'tier-dropdown-list-container', TIERS);
+
+        // 포지션 일반 셀렉트 박스
+        const mainPosSelect = document.getElementById('add-p-main-pos') as HTMLSelectElement;
+        const subPosSelect = document.getElementById('add-p-sub-pos') as HTMLSelectElement;
+
+        if (mainPosSelect) {
+            POSITIONS.forEach(pos => {
+                const option = new Option(pos, pos);
+                mainPosSelect.add(option);
+            });
+        }
+        if (subPosSelect) {
+            POSITIONS.forEach(pos => {
+                const option = new Option(pos, pos);
+                subPosSelect.add(option);
+            });
+        }
+    },
+
     // 1. 좌측 플레이어 리스트 (경매 순서)
     renderPlayerList(players: Record<string, Player>, order: string[], userRole: string, auctionStatus: string) {
         const el = document.getElementById('player-list');
