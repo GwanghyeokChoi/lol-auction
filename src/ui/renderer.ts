@@ -1,4 +1,5 @@
 import type { Player, Team, AuctionState } from "../types";
+import { escapeHtml } from "../utils/sanitize";
 
 const TIERS = [
     '언랭크', '챌린저', '그랜드마스터', '마스터', 
@@ -124,7 +125,7 @@ export const Renderer = {
 
             return `<div class="player-card ${p.status}" data-id="${p.id}">
                 ${deleteBtn}
-                <strong>${p.name}</strong> <small style="color:${tierColor}">${p.currentTier}</small> <small>(${p.mainPos})</small>
+                <strong>${escapeHtml(p.name)}</strong> <small style="color:${tierColor}">${escapeHtml(p.currentTier)}</small> <small>(${escapeHtml(p.mainPos)})</small>
             </div>`;
         }).join('');
 
@@ -150,7 +151,7 @@ export const Renderer = {
         } else if (live.status === 'cooldown') {
             if (live.highestBidderId) {
                 const winner = teams[live.highestBidderId]?.leaderName;
-                statusHtml = `<span style="color:#c8aa6e">${winner}</span> 팀에게 <span style="color:#fff">${live.highestBid}P</span> 낙찰!`;
+                statusHtml = `<span style="color:#c8aa6e">${escapeHtml(winner)}</span> 팀에게 <span style="color:#fff">${live.highestBid}P</span> 낙찰!`;
             } else if (live.activePlayerId && players[live.activePlayerId]?.status === 'passed') {
                 statusHtml = `<span style="color:#ff4655">유찰되었습니다.</span>`;
             } else {
@@ -160,7 +161,7 @@ export const Renderer = {
             statusHtml = `<span style="color:#ffff00">일시 정지 상태입니다.</span>`;
         } else if (live.status === 'bidding') {
             const currentLeader = live.highestBidderId ? teams[live.highestBidderId] : null;
-            statusHtml = `현재 최고가: <span style="color:#ff4655">${live.highestBid || 0}P</span> <span style="font-size:0.8em; color:#c8aa6e">(${currentLeader ? currentLeader.leaderName : '입찰 없음'})</span>`;
+            statusHtml = `현재 최고가: <span style="color:#ff4655">${live.highestBid || 0}P</span> <span style="font-size:0.8em; color:#c8aa6e">(${currentLeader ? escapeHtml(currentLeader.leaderName) : '입찰 없음'})</span>`;
         } else {
             statusHtml = `경매 대기 중`;
         }
@@ -186,7 +187,7 @@ export const Renderer = {
 
             if (live.highestBidderId) {
                 const winner = teams[live.highestBidderId]?.leaderName;
-                resultTitle = `<span style="color:#c8aa6e">${winner}</span> 팀 <span style="color:#fff">${live.highestBid}P</span> 낙찰!`;
+                resultTitle = `<span style="color:#c8aa6e">${escapeHtml(winner)}</span> 팀 <span style="color:#fff">${live.highestBid}P</span> 낙찰!`;
             } else if (live.activePlayerId && players[live.activePlayerId]?.status === 'passed') {
                 resultTitle = `<span style="color:#ff4655">유찰되었습니다.</span>`;
             } else {
@@ -213,17 +214,17 @@ export const Renderer = {
         const currentTierColor = getTierColor(p.currentTier);
 
         infoEl.innerHTML = `
-            <span class="p-name">${p.name}</span>
-            <span class="p-nick">(${p.nickname})</span>
+            <span class="p-name">${escapeHtml(p.name)}</span>
+            <span class="p-nick">(${escapeHtml(p.nickname)})</span>
             <div class="tier-badge">
-                <span style="color:#aaa; font-size:0.8em;">최고:</span> <span style="color:${highTierColor}; font-weight:bold;">${p.highTier}</span>
+                <span style="color:#aaa; font-size:0.8em;">최고:</span> <span style="color:${highTierColor}; font-weight:bold;">${escapeHtml(p.highTier)}</span>
                 <span style="color:#444; margin:0 8px;">|</span>
-                <span style="color:#aaa; font-size:0.8em;">현재:</span> <span style="color:${currentTierColor}; font-weight:bold;">${p.currentTier}</span>
+                <span style="color:#aaa; font-size:0.8em;">현재:</span> <span style="color:${currentTierColor}; font-weight:bold;">${escapeHtml(p.currentTier)}</span>
             </div>
             <div class="p-info-grid">
-                <div><strong>주 포지션:</strong> ${p.mainPos}</div>
-                <div><strong>부 포지션:</strong> ${p.subPos}</div>
-                <div class="full"><strong>Most:</strong> ${p.most ? p.most.join(', ') : '-'}</div>
+                <div><strong>주 포지션:</strong> ${escapeHtml(p.mainPos)}</div>
+                <div><strong>부 포지션:</strong> ${escapeHtml(p.subPos)}</div>
+                <div class="full"><strong>Most:</strong> ${p.most ? p.most.map(escapeHtml).join(', ') : '-'}</div>
             </div>
         `;
     },
@@ -237,7 +238,7 @@ export const Renderer = {
             const onlineBadge = t.online ? '<span class="online-dot">●</span>' : '<span class="offline-dot">○</span>';
             return `
             <div class="team-card ${userRole === t.id ? 'active' : ''}" data-id="${t.id}">
-                <div class="t-header">${onlineBadge} ${t.leaderName} ${userRole === t.id ? '(나)' : ''}</div>
+                <div class="t-header">${onlineBadge} ${escapeHtml(t.leaderName)} ${userRole === t.id ? '(나)' : ''}</div>
                 <div class="t-points">${t.points.toLocaleString()} P</div>
                 <div class="t-members">멤버: ${t.members?.length || 0} / 4</div>
                 <div class="t-pause">퍼즈 남음: ${t.pauseCount}회</div>
@@ -277,13 +278,13 @@ export const Renderer = {
         
         return `
             <div style="font-size: 16px; font-weight: bold; margin-bottom: 8px; color: #fff;">
-                ${p.name} <span style="font-size: 13px; color: #888; font-weight: normal;">(${p.nickname})</span>
+                ${escapeHtml(p.name)} <span style="font-size: 13px; color: #888; font-weight: normal;">(${escapeHtml(p.nickname)})</span>
             </div>
             <div style="font-size: 13px; line-height: 1.6; color: #ccc;">
-                <div><span style="color:#888;">최고:</span> <span style="color:${highTierColor}; font-weight:bold;">${p.highTier}</span></div>
-                <div><span style="color:#888;">현재:</span> <span style="color:${currentTierColor}; font-weight:bold;">${p.currentTier}</span></div>
-                <div style="margin-top: 4px;"><span style="color:#888;">주포 / 부포:</span> ${p.mainPos} / ${p.subPos || '-'}</div>
-                <div><span style="color:#888;">Most:</span> ${p.most ? p.most.join(', ') : '-'}</div>
+                <div><span style="color:#888;">최고:</span> <span style="color:${highTierColor}; font-weight:bold;">${escapeHtml(p.highTier)}</span></div>
+                <div><span style="color:#888;">현재:</span> <span style="color:${currentTierColor}; font-weight:bold;">${escapeHtml(p.currentTier)}</span></div>
+                <div style="margin-top: 4px;"><span style="color:#888;">주포 / 부포:</span> ${escapeHtml(p.mainPos)} / ${p.subPos ? escapeHtml(p.subPos) : '-'}</div>
+                <div><span style="color:#888;">Most:</span> ${p.most ? p.most.map(escapeHtml).join(', ') : '-'}</div>
             </div>
         `;
     }

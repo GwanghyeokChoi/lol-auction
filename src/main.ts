@@ -8,6 +8,7 @@ import { CSVService } from './services/csvService';
 import { PRIVACY_POLICY, TERMS_OF_SERVICE } from './constants/terms';
 import { HELP_CONTENT, UPDATE_LOG } from './constants/content';
 import { TimerUtils } from './utils/timer';
+import { escapeHtml } from './utils/sanitize';
 
 const urlParams = new URLSearchParams(window.location.search);
 const currentRoomId = urlParams.get('id');
@@ -152,7 +153,7 @@ window.addEventListener('DOMContentLoaded', () => {
             teams[tid] = { id: tid, leaderName: item.name, points: item.points, members: [], pauseCount: 2 };
             const tLink = `${baseUrl}?id=${roomId}&role=${tid}`;
             linksHtml += `
-                <div class="link-label">${i === 0 ? '👑 (방장) ' : ''}${item.name} (${item.points}P)</div>
+                <div class="link-label">${i === 0 ? '👑 (방장) ' : ''}${escapeHtml(item.name)} (${item.points}P)</div>
                 <div class="link-row">
                     <input type="text" value="${tLink}" readonly>
                     <button class="btn-copy" data-link="${tLink}">복사</button>
@@ -556,7 +557,7 @@ window.addEventListener('DOMContentLoaded', () => {
                         break;
                     }
                 }
-                statusText = `낙찰됨 - ${soldTeamName} 팀`;
+                statusText = `낙찰됨 - ${escapeHtml(soldTeamName)} 팀`;
                 statusColor = '#c8aa6e';
             } else if (p.status === 'passed') {
                 statusText = '유찰됨';
@@ -573,15 +574,15 @@ window.addEventListener('DOMContentLoaded', () => {
                 <div style="margin-bottom:15px; text-align:center; font-size:16px; font-weight:bold; color:${statusColor}; border:1px solid ${statusColor}; padding:8px; border-radius:4px;">
                     ${statusText}
                 </div>
-                <div style="margin-bottom:10px;"><strong>최고 티어:</strong> ${p.highTier}</div>
-                <div style="margin-bottom:10px;"><strong>현재 티어:</strong> ${p.currentTier}</div>
-                <div style="margin-bottom:10px;"><strong>주 포지션:</strong> ${p.mainPos}</div>
+                <div style="margin-bottom:10px;"><strong>최고 티어:</strong> ${escapeHtml(p.highTier)}</div>
+                <div style="margin-bottom:10px;"><strong>현재 티어:</strong> ${escapeHtml(p.currentTier)}</div>
+                <div style="margin-bottom:10px;"><strong>주 포지션:</strong> ${escapeHtml(p.mainPos)}</div>
             `;
 
             if (isStarted) {
                 infoHtml += `
-                    <div style="margin-bottom:10px;"><strong>부 포지션:</strong> ${p.subPos}</div>
-                    <div><strong>Most:</strong> ${p.most.join(', ')}</div>
+                    <div style="margin-bottom:10px;"><strong>부 포지션:</strong> ${escapeHtml(p.subPos)}</div>
+                    <div><strong>Most:</strong> ${p.most.map(escapeHtml).join(', ')}</div>
                 `;
             } else {
                 infoHtml += `<div style="color:#888; margin-top:20px; text-align:center;">🔒 경매가 시작되면 상세 정보가 공개됩니다.</div>`;
@@ -649,12 +650,12 @@ window.addEventListener('DOMContentLoaded', () => {
                     const p = players[pid];
                     return `<div class="player-card sold">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <strong>${p.name}</strong> 
-                            <small style="background:#333; padding:2px 6px; border-radius:4px;">${p.currentTier}</small>
+                            <strong>${escapeHtml(p.name)}</strong>
+                            <small style="background:#333; padding:2px 6px; border-radius:4px;">${escapeHtml(p.currentTier)}</small>
                         </div>
                         <div style="font-size:12px; color:#aaa; margin-top:6px; line-height:1.4;">
-                            <div>포지션: ${p.mainPos} ${p.subPos ? `/ ${p.subPos}` : ''}</div>
-                            <div>Most: ${p.most ? p.most.join(', ') : '-'}</div>
+                            <div>포지션: ${escapeHtml(p.mainPos)} ${p.subPos ? `/ ${escapeHtml(p.subPos)}` : ''}</div>
+                            <div>Most: ${p.most ? p.most.map(escapeHtml).join(', ') : '-'}</div>
                         </div>
                     </div>`;
                 }).join('')
