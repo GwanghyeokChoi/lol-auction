@@ -1,6 +1,7 @@
 import { ref, get, update, push } from "firebase/database";
 import { db } from "../firebase";
 import { TimerUtils } from "../utils/timer";
+import { escapeHtml } from "../utils/sanitize";
 import type { AuctionState } from "../types";
 
 export const AuctionService = {
@@ -136,7 +137,7 @@ export const AuctionService = {
         const logKey = push(ref(db, `rooms/${roomId}/logs`)).key;
         const actionText = nextBid < currentBid ? "정정" : "입찰";
         updates[`rooms/${roomId}/logs/${logKey}`] = {
-            msg: `<strong>${data.teams[teamId].leaderName}</strong>님이 <strong>${activePlayer.name}</strong>에게 <span class="amt" style="font-size:1.1em">${nextBid}P</span> ${actionText}!`,
+            msg: `<strong>${escapeHtml(data.teams[teamId].leaderName)}</strong>님이 <strong>${escapeHtml(activePlayer.name)}</strong>에게 <span class="amt" style="font-size:1.1em">${nextBid}P</span> ${actionText}!`,
             timestamp: TimerUtils.getServerTime()
         };
 
@@ -164,7 +165,7 @@ export const AuctionService = {
 
         const logKey = push(ref(db, `rooms/${roomId}/logs`)).key;
         updates[`rooms/${roomId}/logs/${logKey}`] = {
-            msg: `⏸ <strong>${team.leaderName}</strong>님이 퍼즈를 요청했습니다. (2분 제한)`,
+            msg: `⏸ <strong>${escapeHtml(team.leaderName)}</strong>님이 퍼즈를 요청했습니다. (2분 제한)`,
             timestamp: TimerUtils.getServerTime()
         };
 
@@ -228,10 +229,10 @@ export const AuctionService = {
             const currentMembers = winner.members || [];
             updates[`rooms/${roomId}/teams/${live.highestBidderId}/members`] = [...currentMembers, live.activePlayerId];
             
-            resultMsg = `🎉 <strong>${activePlayer.name}</strong> -> <strong>${winner.leaderName}</strong>팀 낙찰! (<span class="amt">${live.highestBid}P</span>)`;
+            resultMsg = `🎉 <strong>${escapeHtml(activePlayer.name)}</strong> -> <strong>${escapeHtml(winner.leaderName)}</strong>팀 낙찰! (<span class="amt">${live.highestBid}P</span>)`;
         } else {
             updates[`rooms/${roomId}/players/${live.activePlayerId}/status`] = 'passed';
-            resultMsg = `❌ <strong>${activePlayer.name}</strong> 유찰되었습니다.`;
+            resultMsg = `❌ <strong>${escapeHtml(activePlayer.name)}</strong> 유찰되었습니다.`;
         }
 
         const logKey = push(ref(db, `rooms/${roomId}/logs`)).key;
