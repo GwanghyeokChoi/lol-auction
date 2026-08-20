@@ -3,7 +3,7 @@ export const HELP_CONTENT = `
 <p><strong>0. 서비스 안내</strong></p>
 <ul>
     <li>본 사이트는 리그 오브 레전드 내전 팀 구성을 위한 실시간 경매 시스템입니다.</li>
-    <li>모바일 환경은 지원하지 않으며, PC 전체 화면 해상도에 최적화되어 있습니다.</li>
+    <li>PC, 태블릿, 모바일 등 다양한 화면 크기를 지원합니다.</li>
     <li>이용 전 개인정보처리방침 및 이용약관을 반드시 확인해 주세요.</li>
 </ul>
 
@@ -63,6 +63,14 @@ export const HELP_CONTENT = `
 export const UPDATE_LOG = `
 <h3>🚀 패치노트</h3>
 <ul class="update-list">
+    <li>
+        <span class="version">v2.0.0</span> <span class="date">2026.08.19</span>
+        <p>- 반응형 웹 전면 지원 (모바일 / 태블릿 / 데스크톱)</p>
+        <p>- 'PC 접속 권장' 안내 문구 및 모바일 경고 팝업 제거</p>
+        <p>- 모바일에서 화면이 잘리던 문제 및 통계바 위치 오류 수정</p>
+        <p>- 좁은 화면에서 입찰 패널이 로그 영역을 가리던 문제 개선</p>
+        <p>- 버튼·입력창 터치 영역 확대 및 가독성 개선</p>
+    </li>
     <li>
         <span class="version">v1.4.1</span> <span class="date">2026.06.15</span>
         <p>- 참가자 명단 수동 등록 시 티어 및 포지션 Select Box 선택 기능 추가</p>

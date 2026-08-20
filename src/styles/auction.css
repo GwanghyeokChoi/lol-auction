@@ -4,9 +4,11 @@ body {
     background-color: #010a13;
     color: #f0e6d2;
     font-family: 'Pretendard', -apple-system, sans-serif;
-    overflow: hidden; /* 전체 스크롤 방지 */
+    overflow: hidden; /* 데스크톱: 전체 스크롤 방지 (모바일에서는 해제) */
+    overflow-x: hidden; /* 가로 스크롤은 모든 해상도에서 차단 */
     height: 100vh;
     height: 100dvh;
+    -webkit-text-size-adjust: 100%; /* 모바일 자동 폰트 확대 방지 */
 }
 
 #app {
@@ -28,7 +30,7 @@ body {
 .site-header {
     background: #0d1117;
     border-bottom: 1px solid #30363d;
-    padding: 10px 20px;
+    padding: 10px clamp(12px, 3vw, 20px);
     flex: 0 0 auto;
     z-index: 100;
 }
@@ -37,12 +39,14 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
     max-width: 1200px;
     margin: 0 auto;
 }
 
 .logo {
-    font-size: 20px;
+    font-size: clamp(1rem, 3.5vw, 1.25rem);
+    white-space: nowrap;
     font-weight: bold;
     color: #c8aa6e;
     cursor: pointer;
@@ -50,7 +54,8 @@ body {
 
 .nav-menu {
     display: flex;
-    gap: 10px;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
 .nav-btn {
@@ -62,6 +67,7 @@ body {
     border-radius: 4px;
     cursor: pointer;
     transition: 0.2s;
+    white-space: nowrap;
 }
 
 .nav-btn:hover {
@@ -80,13 +86,13 @@ body {
 
 .landing-content {
     max-width: 800px;
-    padding: 40px;
+    padding: clamp(20px, 5vw, 40px);
     width: 100%;
     margin: auto;
 }
 
 .landing-title {
-    font-size: 64px;
+    font-size: clamp(2rem, 8vw, 4rem);
     font-weight: bold;
     color: #c8aa6e;
     margin-bottom: 20px;
@@ -95,17 +101,17 @@ body {
 }
 
 .landing-subtitle {
-    font-size: 24px;
+    font-size: clamp(1rem, 3.5vw, 1.5rem);
     color: #8b949e;
-    margin-bottom: 50px;
+    margin-bottom: clamp(28px, 6vw, 50px);
     line-height: 1.5;
 }
 
 .landing-features {
     display: flex;
     justify-content: center;
-    gap: 40px;
-    margin-bottom: 60px;
+    gap: clamp(16px, 4vw, 40px);
+    margin-bottom: clamp(32px, 7vw, 60px);
     flex-wrap: wrap;
 }
 
@@ -113,20 +119,22 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
     color: #f0e6d2;
-    font-size: 18px;
-    min-width: 150px;
+    font-size: clamp(0.875rem, 2.5vw, 1.125rem);
+    flex: 1 1 140px;
+    min-width: 140px;
+    max-width: 220px;
 }
 
 .feature-icon {
-    font-size: 48px;
+    font-size: clamp(2rem, 6vw, 3rem);
     margin-bottom: 10px;
 }
 
 .landing-btn {
-    font-size: 24px;
-    padding: 20px 60px;
+    font-size: clamp(1.125rem, 3.5vw, 1.5rem);
+    padding: clamp(14px, 3vw, 20px) clamp(30px, 8vw, 60px);
     border-radius: 50px;
     background: linear-gradient(135deg, #c8aa6e 0%, #a08248 100%);
     color: #010a13;
@@ -159,7 +167,7 @@ body {
 
 .modal {
     background: #1c1c1f;
-    padding: 40px 30px 30px 30px;
+    padding: clamp(24px, 5vw, 40px) clamp(16px, 4vw, 30px) clamp(20px, 4vw, 30px);
     border: 1px solid #c8aa6e;
     width: 95%; max-width: 500px; max-height: 90vh; overflow-y: auto;
     border-radius: 8px; position: relative;
@@ -184,13 +192,17 @@ body {
 }
 
 .btn-close-modal {
-    position: absolute; top: 15px; right: 20px;
+    position: absolute; top: 8px; right: 10px;
     background: none; border: none; color: #c8aa6e;
     font-size: 32px; cursor: pointer; line-height: 1;
     z-index: 10;
+    /* 최소 터치 영역 확보 */
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0;
 }
 
-.modal h1 { color: #c8aa6e; text-align: center; margin-bottom: 20px; letter-spacing: 2px; font-size: 24px; }
+.modal h1 { color: #c8aa6e; text-align: center; margin-bottom: 20px; letter-spacing: 2px; font-size: clamp(1.25rem, 4vw, 1.5rem); }
 
 .setup-notice {
     text-align: center; background: rgba(200, 170, 110, 0.1);
@@ -259,7 +271,8 @@ select.bid-input {
 
 
 .leader-row { display: flex; gap: 5px; margin-bottom: 10px; align-items: center; }
-.leader-point-input { width: 60px; text-align: center; }
+.leader-name-input { flex: 1 1 auto; min-width: 0; }
+.leader-point-input { flex: 0 0 clamp(64px, 22%, 90px); width: auto; text-align: center; }
 
 .btn-remove-leader {
     background: #7a0019; color: #fff; border: 1px solid #ff4655;
@@ -268,8 +281,8 @@ select.bid-input {
 }
 
 .scroll-input-area {
-    max-height: 300px; overflow-y: auto; background: #0d1117;
-    padding: 15px; border: 1px solid #30363d; margin-bottom: 15px; border-radius: 4px;
+    max-height: min(300px, 45vh); overflow-y: auto; background: #0d1117;
+    padding: clamp(10px, 3vw, 15px); border: 1px solid #30363d; margin-bottom: 15px; border-radius: 4px;
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
@@ -280,15 +293,15 @@ select.bid-input {
 
 .link-row { display: flex; gap: 8px; margin-bottom: 10px; }
 .link-row input {
-    flex: 1; padding: 10px; background: #1c1c1f; border: 1px solid #484f58;
-    color: #8b949e; font-size: 12px; border-radius: 4px;
+    flex: 1 1 auto; min-width: 0; padding: 10px; background: #1c1c1f; border: 1px solid #484f58;
+    color: #8b949e; font-size: 12px; border-radius: 4px; min-height: 44px;
 }
 
 /* --- [4. 버튼 스타일 공통] --- */
 button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transition: 0.2s; border-radius: 4px; }
-.btn-primary { background: #c8aa6e; color: #010a13; padding: 16px; width: 100%; font-size: 18px; }
-.btn-secondary { background: #30363d; color: #fff; border: 1px solid #484f58; padding: 12px; width: 100%; }
-.btn-copy { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; min-width: 65px; font-size: 12px; }
+.btn-primary { background: #c8aa6e; color: #010a13; padding: 16px; width: 100%; font-size: clamp(0.9375rem, 2.5vw, 1.125rem); min-height: 44px; }
+.btn-secondary { background: #30363d; color: #fff; border: 1px solid #484f58; padding: 12px; width: 100%; min-height: 44px; }
+.btn-copy { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; min-width: 65px; font-size: 12px; min-height: 44px; flex-shrink: 0; }
 .btn-copy.success { border-color: #238636; color: #3fb950; }
 
 .btn-small {
@@ -296,6 +309,7 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     font-size: 12px;
     min-width: 80px;
     width: auto;
+    min-height: 44px;
 }
 
 .modal-footer-btns { display: flex; gap: 10px; margin-top: 10px; }
@@ -303,20 +317,12 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
 /* --- [5. 경매장 레이아웃 및 반응형] --- */
 .auction-container {
     display: grid;
-    grid-template-columns: 250px 1fr 300px;
-    grid-template-rows: 1fr 45px;
+    /* 사이드바를 뷰포트 폭에 따라 유동적으로 (데스크톱 최대값은 기존 250/300px 유지) */
+    grid-template-columns: clamp(180px, 18vw, 250px) minmax(0, 1fr) clamp(210px, 22vw, 300px);
+    grid-template-rows: minmax(0, 1fr) auto;
     height: 100%;
     background: radial-gradient(circle, #091428 0%, #010a13 100%);
     overflow: hidden;
-}
-
-@media (max-width: 1000px) {
-    .auction-container {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr auto 45px;
-    }
-    .sidebar { height: 250px; }
-    .modal-footer-btns { flex-direction: column; }
 }
 
 .sidebar {
@@ -324,6 +330,7 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     border: 1px solid #1e2328;
     display: flex;
     flex-direction: column;
+    min-width: 0; /* grid item 축소 허용 */
     overflow: hidden;
 }
 
@@ -360,6 +367,7 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     padding: 10px;
     position: relative;
     height: 100%;
+    min-width: 0; /* grid item이 내용물보다 좁아질 수 있게 허용 */
     overflow: hidden; /* 스크롤 방지 */
 }
 
@@ -371,10 +379,11 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
 }
 
 .timer-display {
-    font-size: 60px;
+    font-size: clamp(2.25rem, 7vw, 3.75rem);
     color: #ff4655;
     font-weight: bold;
     margin: 5px 0;
+    line-height: 1.1;
     text-shadow: 0 0 20px rgba(255, 70, 85, 0.5);
 }
 
@@ -384,10 +393,11 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     text-align: center;
     margin-bottom: 5px;
     min-height: 24px;
-    font-size: 16px;
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
     font-weight: bold;
     color: #c8aa6e;
     flex: 0 0 auto;
+    padding: 0 8px;
 }
 
 .auction-card {
@@ -406,10 +416,11 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
 }
 
 .player-info-area {
-    padding: 15px;
+    padding: clamp(8px, 2.5vw, 15px);
     border-bottom: 1px solid #333;
     text-align: center;
     flex: 0 0 auto; /* 크기 고정 (내용물만큼) */
+    overflow-wrap: anywhere; /* 긴 닉네임이 넘치지 않도록 */
 }
 
 .card-bottom-area {
@@ -424,6 +435,8 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     width: 100%;
     flex: 1;
     min-height: 0; /* 중요 */
+    min-width: 0; /* 중요: 좁은 화면에서 입찰 패널에 밀리지 않도록 */
+    overflow-wrap: anywhere;
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid #30363d;
     border-radius: 4px;
@@ -451,9 +464,9 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
 
 /* 입찰 패널 (우측) */
 .control-panel {
-    width: 35%;
-    min-width: 280px;
-    flex-shrink: 0;
+    /* 기존 min-width:280px가 좁은 화면에서 로그 영역을 밀어내던 문제 해결 */
+    flex: 0 0 clamp(230px, 33%, 320px);
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -467,7 +480,17 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
 
 .admin-btn-group {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
+}
+
+/* width:100% 버튼들이 flex row에서 넘치지 않도록 */
+.admin-btn-group > button {
+    flex: 1 1 130px;
+    width: auto;
+    min-width: 0;
+    font-size: clamp(0.75rem, 1.6vw, 0.875rem);
+    padding: 10px 8px;
 }
 
 .bid-actions {
@@ -495,6 +518,7 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     color: #fff;
     border: 1px solid #30363d;
     width: 100%;
+    min-height: 44px; /* 최소 터치 영역 */
     white-space: nowrap;
 }
 .btn-bid.plus { background: #238636; border-color: #2ea043; }
@@ -514,6 +538,12 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     gap: 5px;
 }
 
+/* 입력칸이 flex 안에서 버튼을 밀어내지 않도록 */
+.custom-bid-group .bid-input {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 /* .bid-input 은 위로 이동됨 */
 
 .bid-submit-btn {
@@ -525,6 +555,7 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     border: none;
     border-radius: 4px;
     font-size: 14px;
+    min-height: 44px; /* 최소 터치 영역 */
     flex-shrink: 0;
     white-space: nowrap;
 }
@@ -533,7 +564,7 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
 }
 
 /* --- [Player Info Styles] --- */
-.p-name { font-size: 24px; font-weight: bold; display: block; color: #fff; }
+.p-name { font-size: clamp(1.125rem, 4vw, 1.5rem); font-weight: bold; display: block; color: #fff; }
 .p-nick { font-size: 14px; color: #888; display: block; margin-bottom: 5px; }
 .tier-badge {
     display: inline-block;
@@ -590,13 +621,16 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
 /* --- [8. 하단 통계바] --- */
 #auction-stats {
     grid-column: 1 / -1;
-    height: 45px;
+    min-height: 45px;
+    padding: 6px 10px;
     background: #010a13;
     border-top: 1px solid #c8aa6e;
     display: flex;
     align-items: center;
     justify-content: space-around;
-    font-size: 14px;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    font-size: clamp(0.75rem, 2.2vw, 0.875rem);
     color: #c8aa6e;
     z-index: 100;
 }
@@ -661,7 +695,8 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     position: absolute;
     top: 130%; /* 아이콘 아래쪽에 표시 */
     left: 0; /* 왼쪽 정렬 */
-    width: 250px; /* 너비 축소 */
+    width: min(250px, calc(100vw - 32px)); /* 좁은 화면에서 넘치지 않도록 */
+    max-width: calc(100vw - 32px);
     background: #1c1c1f;
     border: 1px solid #c8aa6e;
     padding: 15px;
@@ -756,121 +791,230 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* --- [12. 반응형 스타일 (Mobile)] --- */
-@media (max-width: 1000px) {
+/* --- [12. 반응형 스타일] ---
+   브레이크포인트 (기존 1000px / 768px 기준 유지 + 480px 추가)
+   - 데스크톱  : 1001px 이상  -> 3열 그리드
+   - 태블릿    : 769px~1000px -> 상단 메인 + 하단 사이드바 2열
+   - 모바일    : 481px~768px  -> 세로 1열 + 페이지 스크롤 허용
+   - 소형 모바일: 480px 이하   -> 여백/폰트 추가 축소
+*/
+
+/* --- [12-1. 태블릿: 769px ~ 1000px] --- */
+@media (max-width: 1000px) and (min-width: 769px) {
     .auction-container {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr auto 45px;
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+            "main  main"
+            "left  right"
+            "stats stats";
+        grid-template-rows: minmax(0, 1fr) minmax(140px, 30%) auto;
     }
+
+    .main-dashboard  { grid-area: main; }
+    .left-sidebar    { grid-area: left; }
+    .right-sidebar   { grid-area: right; }
+    #auction-stats   { grid-area: stats; }
 
     .sidebar {
-        height: 150px; /* 사이드바 높이 더 축소 */
-        overflow-y: auto;
+        height: auto;
+        min-height: 0;
     }
 
-    .dashboard-content {
+    /* 로그 / 입찰 패널을 세로로 쌓아 가로 압박 해소 */
+    .card-bottom-area {
         flex-direction: column;
-        /* overflow-y: auto; -> 부모에게 위임 */
-    }
-
-    .control-panel-wrapper {
-        width: 100%;
-        margin-left: 0;
     }
 
     .control-panel {
+        flex: 0 0 auto;
         width: 100%;
-    }
-
-    .card-bottom-area {
-        flex-direction: column;
     }
 
     .log-container {
         border-right: none;
         border-bottom: 1px solid #333;
-        height: 150px; /* 로그 영역 높이 제한 */
-        flex: none;
+        flex: 1 1 auto;
+        min-height: 90px;
     }
 
-    .landing-title {
-        font-size: 40px;
-    }
-
-    .landing-subtitle {
-        font-size: 18px;
-    }
-
-    .feature-item {
-        min-width: 100%;
+    .modal-footer-btns {
+        flex-direction: column;
     }
 }
 
+/* --- [12-2. 모바일: 768px 이하] --- */
 @media (max-width: 768px) {
-    .header-content {
-        flex-direction: column;
-        gap: 5px;
+    /* [중요] 데스크톱에서는 body가 overflow:hidden인 고정 앱 셸이지만,
+       모바일에서는 세로로 쌓인 내용이 잘리지 않도록 페이지 스크롤을 허용한다. */
+    body {
+        overflow-y: auto;
+        overflow-x: hidden;
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+        -webkit-overflow-scrolling: touch;
     }
 
-    .nav-menu {
-        width: 100%;
-        justify-content: center;
+    #app {
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
     }
 
+    .screen-content {
+        overflow: visible;
+        flex: 1 1 auto;
+    }
+
+    #landing-screen,
+    #setup-screen {
+        overflow-y: visible;
+    }
+
+    /* 헤더는 가로 배치 유지 (세로 배치는 공간 낭비) */
+    .nav-btn {
+        min-height: 44px;
+        padding: 8px 12px;
+    }
+
+    /* 모달은 전체 화면으로 */
     .modal {
         width: 100%;
-        height: 100%;
-        max-height: 100%;
-        border-radius: 0;
-        padding: 15px;
-    }
-
-    /* 모바일 경고 팝업 예외 처리 */
-    #mobile-warning .modal {
-        width: 80%;
-        height: auto;
+        min-height: 100dvh;
         max-height: none;
-        border-radius: 8px;
-        border: 1px solid #c8aa6e;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        padding: 20px 16px 24px;
     }
 
-    /* 모바일에서 경매 화면 재배치 */
+    /* 오버레이 모달은 스크롤 가능하게 */
+    .overlay {
+        align-items: flex-start;
+        overflow-y: auto;
+    }
+
+    /* 결과 모달(step-2)은 absolute + min-height:100dvh 조합에서 static 위치가
+       step-1 아래로 밀릴 수 있으므로, 모바일에서는 화면에 고정해 확실히 덮는다. */
+    .result-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin: 0;
+        overflow-y: auto;
+    }
+
+    /* 경매 화면 세로 재배치 (order로 명시 지정)
+       [주의] main.ts가 방 입장 시 인라인으로 style.display='grid'를 지정하므로
+       여기서 display:flex를 걸어도 인라인 스타일에 덮여 적용되지 않는다.
+       (같은 인라인 display가 화면을 숨길 때 'none'으로도 쓰이므로 !important도 금물)
+       따라서 display는 grid 그대로 두고 1열 그리드로만 전환한다. order는 grid에서도 동작. */
     .auction-container {
-        display: flex;
-        flex-direction: column;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: none;
+        grid-auto-rows: auto;
+        grid-auto-flow: row;
         height: auto;
-        /* overflow-y: auto; -> 부모에게 위임 */
+        overflow: visible; /* 가이드 툴팁이 컨테이너에 잘리지 않도록 */
     }
 
     .main-dashboard {
-        order: 1; /* 메인 대시보드를 가장 위로 */
+        order: 1;
         height: auto;
         overflow: visible;
-        padding: 5px;
+        padding: 8px;
+    }
+
+    /* 입찰 판단에 필요한 팀 현황을 선수 목록보다 위로 */
+    .right-sidebar {
+        order: 2;
+        border-left: none;
+    }
+
+    .left-sidebar {
+        order: 3;
+        border-right: none;
+    }
+
+    #auction-stats {
+        order: 4; /* order 미지정 시 통계바가 최상단으로 올라오던 문제 해결 */
     }
 
     .sidebar {
-        order: 2; /* 사이드바를 아래로 */
         height: auto;
-        max-height: 200px;
+        border-top: 1px solid #1e2328;
+    }
+
+    /* 팀 수는 방장이 계속 늘릴 수 있으므로 높이를 제한하고 내부 스크롤 처리.
+       (제한이 없으면 팀이 많을 때 TEAMS가 화면을 다 먹고 PLAYERS가 한참 아래로 밀림)
+       실측 기준 "카드 2행(=2열 그리드에서 4개) + 섹션 헤더" 높이:
+         .panel-header 51px
+       + .scroll-area 상단 padding 10px
+       + .team-card 99px x 2행
+       + 행 사이 gap 8px
+       + .scroll-area 하단 padding 10px
+       + .sidebar 상하 border 1px x 2
+       = 279px  (스크롤은 flex 자식인 #team-list의 overflow-y:auto가 담당) */
+    .right-sidebar {
+        max-height: 279px;
+    }
+
+    /* 선수 명단은 수십 명이 될 수 있으므로 내부 스크롤 유지 */
+    .left-sidebar {
+        max-height: 55vh;
+    }
+
+    /* #team-list/#player-list 자신과 내부 .scroll-area에 padding이 이중으로 걸려
+       좁은 폭에서 카드 공간을 20px 낭비하므로 바깥쪽 padding 제거 */
+    #team-list,
+    #player-list {
+        padding: 0;
+    }
+
+    /* 전체 너비를 쓰게 되었으므로 카드를 여러 열로 배치해 세로 길이를 줄인다 */
+    #team-list .scroll-area,
+    #player-list .scroll-area {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 8px;
+        align-content: start;
+    }
+
+    #team-list .team-card,
+    #player-list .player-card {
+        margin-bottom: 0;
     }
 
     .auction-card {
         max-width: 100%;
+        flex: none; /* height:auto 컨텍스트에서는 내용만큼 */
     }
 
     .card-bottom-area {
         flex-direction: column;
+        overflow: visible;
+    }
+
+    .log-container {
+        border-right: none;
+        border-bottom: 1px solid #333;
+        height: auto;
+        min-height: 120px;
+        max-height: 30vh;
+        flex: none;
     }
 
     .control-panel {
+        flex: none;
         width: 100%;
         padding: 10px;
+        overflow: visible;
     }
 
     .bid-btn-group {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 3px;
+        gap: 6px;
     }
 
     .leader-row {
@@ -878,51 +1022,100 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     }
 
     .leader-name-input {
-        width: 100%;
+        flex: 1 1 100%;
         margin-bottom: 5px;
-        padding: 8px;
-        font-size: 13px;
     }
 
     .leader-point-input {
-        flex: 1;
-        padding: 8px;
-        font-size: 13px;
+        flex: 1 1 auto;
     }
 
     .btn-remove-leader {
-        flex: 0 0 40px;
-        height: 40px;
+        flex: 0 0 44px;
+        height: 44px;
     }
 
-    /* 버튼 및 입력칸 크기 축소 */
-    .btn-primary, .btn-secondary, .btn-copy, .btn-bid, .landing-btn {
-        padding: 8px;
-        font-size: 13px;
+    /* 최소 터치 영역 확보 + iOS 포커스 시 자동 확대 방지(16px) */
+    .btn-primary, .btn-secondary, .btn-copy, .btn-bid, .btn-small, .bid-submit-btn {
+        min-height: 44px;
     }
 
-    .landing-btn {
-        padding: 12px 30px;
-        font-size: 18px;
+    input[type="text"], input[type="number"], select,
+    .bid-input, select.bid-input, .searchable-select-input, .leader-name-input {
+        min-height: 44px;
+        font-size: 16px;
     }
 
     .timer-display {
-        font-size: 32px;
         margin: 0;
     }
+}
 
-    .p-name {
-        font-size: 20px;
+/* --- [12-3. 소형 모바일: 480px 이하] --- */
+@media (max-width: 480px) {
+    .site-header {
+        padding: 8px 12px;
+    }
+
+    .main-dashboard {
+        padding: 6px;
     }
 
     .p-info-grid {
-        padding: 5px;
+        grid-template-columns: 1fr;
+        padding: 8px;
         font-size: 12px;
     }
 
-    .status-message {
-        font-size: 14px;
-        min-height: 20px;
+    /* 1열 그리드에서 span 2가 빈 열을 만들지 않도록 */
+    .p-info-grid .full {
+        grid-column: span 1;
+    }
+
+    .bid-btn-group {
+        gap: 5px;
+    }
+
+    .btn-bid {
+        font-size: 12px;
+        padding: 8px 0;
+    }
+
+    .admin-btn-group > button {
+        flex: 1 1 100%;
+    }
+
+    /* 이 구간은 카드 gap이 6px이므로 2행 높이가 2px 줄어든다 (279 - 2 = 277) */
+    .right-sidebar {
+        max-height: 277px;
+    }
+
+    .left-sidebar {
+        max-height: 50vh;
+    }
+
+    .log-container {
+        font-size: 12px;
+        max-height: 25vh;
+    }
+
+    /* 좁은 폭에서 2열이 확실히 들어가도록 카드 최소폭 축소 */
+    #team-list .scroll-area,
+    #player-list .scroll-area {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 6px;
+    }
+
+    .modal {
+        padding: 16px 12px 20px;
+    }
+
+    .modal-footer-btns {
+        flex-direction: column;
+    }
+
+    .site-footer {
+        font-size: 10px;
     }
 }
 
@@ -936,10 +1129,16 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     z-index: 10000; /* 최상위 */
     pointer-events: none; /* 마우스 이벤트 통과 */
-    width: 250px;
+    width: min(250px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
     text-align: left;
     font-weight: normal;
     color: #ccc;
+}
+
+/* 터치 기기에서는 호버 툴팁이 남아있을 수 있으므로 숨김 (탭하면 상세 모달이 뜸) */
+@media (hover: none) {
+    .hover-tooltip { display: none !important; }
 }
 
 /* --- [14. 검색형 셀렉트 박스 스타일] --- */
@@ -955,12 +1154,12 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     top: 100%;
     left: 0;
     width: 100%;
+    max-height: min(200px, 40vh);
     background: #1c1c1f;
     border: 1px solid #c8aa6e;
     border-top: none;
     border-radius: 0 0 4px 4px;
     z-index: 4000;
-    max-height: 200px;
     overflow-y: auto;
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
@@ -977,7 +1176,10 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
 }
 
 .tier-dropdown-list li {
-    padding: 10px;
+    padding: 12px 10px;
+    min-height: 44px; /* 최소 터치 영역 */
+    display: flex;
+    align-items: center;
     cursor: pointer;
     color: #f0e6d2;
     font-size: 14px;
