@@ -31,17 +31,6 @@ window.addEventListener('DOMContentLoaded', () => {
     const leaderInputList = document.getElementById('leader-input-list') as HTMLElement;
     const linkArea = document.getElementById('generated-links-area') as HTMLElement;
 
-    // --- [모바일 접속 경고] ---
-    if (window.innerWidth <= 768) {
-        const warning = document.getElementById('mobile-warning');
-        if (warning) warning.style.display = 'flex';
-    }
-
-    document.getElementById('btn-close-warning')?.addEventListener('click', () => {
-        const warning = document.getElementById('mobile-warning');
-        if (warning) warning.style.display = 'none';
-    });
-
     // --- [초기 화면 제어] ---
     if (currentRoomId) {
         // 방에 입장한 경우: 랜딩/설정 숨기고 경매장 표시
