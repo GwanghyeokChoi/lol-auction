@@ -27,3 +27,9 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# Firebase Realtime Database 데이터 내보내기 (stats.html 로컬 통계 도구용 입력 파일)
+# 팀원 닉네임 등 개인정보가 포함될 수 있으므로 루트에 두더라도 커밋되지 않도록 제외
+/*-export.json
+/*export*.json
+/_test_export*.json
