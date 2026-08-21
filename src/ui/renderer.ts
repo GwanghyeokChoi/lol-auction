@@ -167,6 +167,11 @@ export const Renderer = {
         });
     },
 
+    // 티어별 색상 (선수 상세 정보 모달 등 renderer.ts 바깥에서도 동일한 색상표를 쓰기 위해 노출)
+    getTierColor(tier: string): string {
+        return getTierColor(tier);
+    },
+
     // 1. 좌측 플레이어 리스트 (경매 순서)
     renderPlayerList(players: Record<string, Player>, order: string[], userRole: string, auctionStatus: string) {
         const el = document.getElementById('player-list');
