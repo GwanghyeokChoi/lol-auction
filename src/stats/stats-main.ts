@@ -410,6 +410,17 @@ function renderChart(buckets: PeriodBucket[]): string {
     `;
 }
 
+/*
+ * 로그를 시간순 채팅 스타일로 렌더링한다 (logs는 analyzeRoom에서 이미 timestamp 오름차순 정렬됨).
+ * l.msg 를 이스케이프하지 않고 그대로 넣는 이유: 로그 문자열은 앱이 만든 <strong>/<span> 마크업을
+ * 포함하고, 그 안의 사용자 입력(팀장·선수 이름)은 auctionService에서 저장 전에 이미 escapeHtml 처리된다.
+ */
+function renderLogList(logs: AnalyzedLog[]): string {
+    return logs
+        .map((l) => `<div class="log-item"><span class="log-time">[${formatLogTime(l.timestamp)}]</span>${l.msg}</div>`)
+        .join('');
+}
+
 function renderCompleteRoom(room: AnalyzedRoom): string {
     const teamsHtml = room.teams.map((t) => {
         const membersHtml = t.members.length > 0
@@ -419,7 +430,7 @@ function renderCompleteRoom(room: AnalyzedRoom): string {
     }).join('');
 
     const logsHtml = room.logs.length > 0
-        ? room.logs.map((l) => `<div class="log-item"><span class="log-time">[${formatLogTime(l.timestamp)}]</span>${l.msg}</div>`).join('')
+        ? renderLogList(room.logs)
         : '<p class="empty-note">로그 없음</p>';
 
     // 진행 시간 = 첫 로그 ~ 완료 로그 (방 생성 시각이 아님 — 준비 시간 제외)
@@ -467,6 +478,9 @@ function renderIncompleteRoom(room: AnalyzedRoom): string {
                 <p class="room-info-line"><strong>팀장:</strong> ${room.leaderNames.length > 0 ? room.leaderNames.map(escapeHtml).join(', ') : '없음'}</p>
                 <h3 style="margin-top:14px;">등록된 참가자</h3>
                 ${playersHtml}
+                ${room.logs.length > 0
+                    ? `<h3 style="margin-top:14px;">로그</h3><div class="log-list">${renderLogList(room.logs)}</div>`
+                    : ''}
             </div>
         </details>
     `;
@@ -583,15 +597,31 @@ function afterPaint(fn: () => void): void {
     requestAnimationFrame(() => requestAnimationFrame(fn));
 }
 
-// 파싱 → 집계 → 렌더. 성공/실패와 무관하게 로딩 표시는 반드시 해제한다.
-function analyzeAndRender(text: string): void {
+/*
+ * 파싱 → 집계 → 렌더.
+ *
+ * [메모리 정리 방침]
+ * 입력 원문(수 MB짜리 문자열)과 JSON.parse 결과(수백~수천 개 방의 원본 객체)는
+ * 집계에 필요한 값을 모두 추출한 직후 참조를 끊는다. 렌더링에는 가공된 AnalyzedRoom[]만 쓰인다.
+ * - 원문은 호출자가 넘긴 box의 value를 비워서 해제한다(호출자 클로저가 문자열을 붙들지 않도록).
+ * - 원본 객체는 render() 호출 '전에' null을 넣어, 무거운 DOM 렌더 중에는 이미 GC 대상이 되게 한다.
+ * AnalyzedRoom은 원본에서 map/filter로 새로 만든 객체·배열만 담으므로 원본을 참조하지 않는다.
+ *
+ * 성공/실패와 무관하게 로딩 해제와 입력 정리(cleanupInput)는 반드시 수행한다.
+ */
+function analyzeAndRender(box: { value: string }, cleanupInput: () => void): void {
     try {
-        const parsed: unknown = JSON.parse(text);
-        render(analyzeAll(parsed));
+        let raw: unknown = JSON.parse(box.value);
+        box.value = '';               // 입력 원문 문자열 참조 해제
+        const rooms = analyzeAll(raw);
+        raw = null;                   // 원본 JSON 객체 전체 참조 해제 (GC 대상)
+        render(rooms);
     } catch (err) {
         const detail = err instanceof Error ? err.message : String(err);
         showError(`데이터를 처리하지 못했습니다. Firebase 콘솔에서 내보낸 JSON이 맞는지 확인해 주세요.\n(${detail})`);
     } finally {
+        box.value = '';               // 파싱 실패 시에도 원문을 남기지 않는다
+        cleanupInput();
         setLoading(false);
     }
 }
@@ -609,12 +639,22 @@ window.addEventListener('DOMContentLoaded', () => {
         beginLoading();
 
         // FileReader로 로컬에서만 읽는다 (서버 전송 없음).
-        const reader = new FileReader();
+        let reader: FileReader | null = new FileReader();
         reader.onload = () => {
-            const text = typeof reader.result === 'string' ? reader.result : '';
-            afterPaint(() => analyzeAndRender(text));
+            // reader.result 가 원본 텍스트를 그대로 붙들고 있으므로 box로 옮긴 뒤 reader를 해제한다.
+            const box = { value: typeof reader?.result === 'string' ? reader.result : '' };
+            if (reader) { reader.onload = null; reader.onerror = null; }
+            reader = null; // FileReader / File 참조 해제
+
+            afterPaint(() => analyzeAndRender(box, () => {
+                // 같은 파일을 다시 골라도 change가 발생하도록 값을 비운다 (File 참조도 함께 해제됨)
+                fileInput.value = '';
+            }));
         };
         reader.onerror = () => {
+            if (reader) { reader.onload = null; reader.onerror = null; }
+            reader = null;
+            fileInput.value = '';
             setLoading(false);
             showError('파일을 읽는 중 오류가 발생했습니다.');
         };
@@ -632,6 +672,10 @@ window.addEventListener('DOMContentLoaded', () => {
         }
 
         beginLoading();
-        afterPaint(() => analyzeAndRender(text));
+        const box = { value: text };
+        afterPaint(() => analyzeAndRender(box, () => {
+            // 성공/실패 무관하게 textarea를 비운다
+            if (textarea) textarea.value = '';
+        }));
     });
 });
