@@ -9,6 +9,7 @@ import { PRIVACY_POLICY, TERMS_OF_SERVICE } from './constants/terms';
 import { HELP_CONTENT, UPDATE_LOG } from './constants/content';
 import { TimerUtils } from './utils/timer';
 import { escapeHtml } from './utils/sanitize';
+import { buildPlayersFromRows, type PlayerRowInput } from './utils/playerRows';
 
 const urlParams = new URLSearchParams(window.location.search);
 const currentRoomId = urlParams.get('id');
@@ -21,9 +22,6 @@ let latestData: any = null;
 TimerUtils.initServerTimeOffset();
 
 window.addEventListener('DOMContentLoaded', () => {
-    // 모달 옵션 동적 생성
-    Renderer.populateSelectOptions();
-
     const landingScreen = document.getElementById('landing-screen') as HTMLElement;
     const setupScreen = document.getElementById('setup-screen') as HTMLElement;
     const modalStep1 = document.getElementById('modal-step-1') as HTMLElement;
@@ -434,8 +432,70 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- [수동 참가자 추가 로직] ---
+    // --- [수동 참가자 일괄 등록 로직] ---
+    // 참가자 1명당 한 행(row)인 표 형태. leader-row(+팀장 추가/-삭제)와 동일한 UX 패턴을 재사용한다.
     const addPlayerModal = document.getElementById('add-player-modal');
+    const addPlayerRowsContainer = document.getElementById('add-player-rows') as HTMLElement;
+    const INITIAL_PLAYER_ROWS = 4;
+
+    // 한 행을 생성. "+참가자 추가" 클릭 시와 모달 초기화(최초 진입/등록 성공 후) 시 동일하게 사용한다.
+    const createPlayerRow = (): HTMLDivElement => {
+        const row = document.createElement('div');
+        row.className = 'player-row';
+        row.innerHTML = `
+            <input type="text" class="p-name-input bid-input" placeholder="이름">
+            <input type="text" class="p-nick-input bid-input" placeholder="닉네임">
+            <div class="searchable-select-container">
+                <input type="text" class="p-hightier-input searchable-select-input bid-input" placeholder="티어 검색">
+                <div class="tier-dropdown-list-container"><ul class="tier-dropdown-list"></ul></div>
+            </div>
+            <div class="searchable-select-container">
+                <input type="text" class="p-currtier-input searchable-select-input bid-input" placeholder="티어 검색">
+                <div class="tier-dropdown-list-container"><ul class="tier-dropdown-list"></ul></div>
+            </div>
+            <select class="p-mainpos-select bid-input">
+                <option value="" selected>선택</option>
+            </select>
+            <select class="p-subpos-select bid-input">
+                <option value="">없음</option>
+            </select>
+            <input type="text" class="p-most-input bid-input" placeholder="아리, 제드, 르블랑">
+            <button type="button" class="btn-remove-leader">-</button>
+        `;
+
+        const highTierInput = row.querySelector('.p-hightier-input') as HTMLInputElement;
+        const currTierInput = row.querySelector('.p-currtier-input') as HTMLInputElement;
+        Renderer.attachTierAutocomplete(highTierInput);
+        Renderer.attachTierAutocomplete(currTierInput);
+        Renderer.populatePositionOptions(row.querySelector('.p-mainpos-select') as HTMLSelectElement);
+        Renderer.populatePositionOptions(row.querySelector('.p-subpos-select') as HTMLSelectElement);
+
+        row.querySelector('.btn-remove-leader')?.addEventListener('click', () => {
+            // 티어 드롭다운은 document.body로 포탈되어 있어 행 삭제만으로는 함께 제거되지 않으므로 먼저 정리
+            Renderer.detachTierAutocomplete(highTierInput);
+            Renderer.detachTierAutocomplete(currTierInput);
+            row.remove();
+        });
+
+        return row;
+    };
+
+    // 표를 초기 빈 행 상태로 되돌림 (모달 최초 진입 시 / 일괄 등록 성공 후 다음 사용을 위해)
+    const resetPlayerRows = () => {
+        // innerHTML 초기화만으로는 document.body로 포탈된 드롭다운이 정리되지 않으므로 먼저 각 행의 것을 해제
+        addPlayerRowsContainer.querySelectorAll('.p-hightier-input, .p-currtier-input').forEach((input) => {
+            Renderer.detachTierAutocomplete(input as HTMLInputElement);
+        });
+        addPlayerRowsContainer.innerHTML = '';
+        for (let i = 0; i < INITIAL_PLAYER_ROWS; i++) {
+            addPlayerRowsContainer.appendChild(createPlayerRow());
+        }
+    };
+    resetPlayerRows();
+
+    document.getElementById('btn-add-player-row')?.addEventListener('click', () => {
+        addPlayerRowsContainer.appendChild(createPlayerRow());
+    });
 
     document.getElementById('btn-open-add-player')?.addEventListener('click', () => {
         if (addPlayerModal) addPlayerModal.style.display = 'flex';
@@ -446,49 +506,40 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('btn-submit-add-player')?.addEventListener('click', async () => {
-        const name = (document.getElementById('add-p-name') as HTMLInputElement).value.trim();
-        const nick = (document.getElementById('add-p-nick') as HTMLInputElement).value.trim();
-        const highTier = (document.getElementById('add-p-high-tier') as HTMLInputElement).value.trim();
-        const currTier = (document.getElementById('add-p-curr-tier') as HTMLInputElement).value.trim();
-        const mainPos = (document.getElementById('add-p-main-pos') as HTMLInputElement).value.trim();
-        const subPos = (document.getElementById('add-p-sub-pos') as HTMLInputElement).value.trim();
-        const mostStr = (document.getElementById('add-p-most') as HTMLInputElement).value.trim();
-
-        if (!name || !nick || !highTier || !currTier || !mainPos) {
-            return alert("필수 항목(*표시)을 입력해주세요.");
-        }
-
-        const most = mostStr.split(',').map(s => s.trim()).filter(Boolean);
-
         if (!latestData || !currentRoomId) return;
 
-        // 새로운 고유 ID 생성 (p_현재시간_랜덤)
-        const newId = `p_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-        const newPlayer = {
-            id: newId,
-            name,
-            nickname: nick,
-            highTier,
-            currentTier: currTier,
-            mainPos,
-            subPos,
-            most,
-            status: 'waiting'
-        };
+        // DOM에서 각 행의 원시 입력값만 읽어오고, 검증/변환은 순수 함수(buildPlayersFromRows)에 위임
+        const rowInputs: PlayerRowInput[] = Array.from(addPlayerRowsContainer.querySelectorAll('.player-row')).map((row) => ({
+            name: (row.querySelector('.p-name-input') as HTMLInputElement).value.trim(),
+            nickname: (row.querySelector('.p-nick-input') as HTMLInputElement).value.trim(),
+            highTier: (row.querySelector('.p-hightier-input') as HTMLInputElement).value.trim(),
+            currentTier: (row.querySelector('.p-currtier-input') as HTMLInputElement).value.trim(),
+            mainPos: (row.querySelector('.p-mainpos-select') as HTMLSelectElement).value.trim(),
+            subPos: (row.querySelector('.p-subpos-select') as HTMLSelectElement).value.trim(),
+            mostStr: (row.querySelector('.p-most-input') as HTMLInputElement).value.trim(),
+        }));
+
+        const { players: newPlayers, errors } = buildPlayersFromRows(rowInputs, Date.now());
+
+        if (errors.length > 0) {
+            return alert(errors.join('\n'));
+        }
+        if (Object.keys(newPlayers).length === 0) {
+            return alert('등록할 참가자 정보를 입력해주세요.');
+        }
 
         try {
-            // 새 선수 추가 및 playerOrder 갱신
-            const currentPlayers = latestData.players || {};
-            currentPlayers[newId] = newPlayer;
+            // 기존 선수 목록 + 새로 등록할 선수들을 한 번에 반영
+            const currentPlayers = { ...(latestData.players || {}), ...newPlayers };
             await RoomService.registerPlayers(currentRoomId, currentPlayers);
 
-            // 모달 닫기 및 입력칸 초기화
+            // 모달 닫기 및 표 초기화
             if (addPlayerModal) addPlayerModal.style.display = 'none';
-            document.querySelectorAll('#add-player-modal input').forEach(input => (input as HTMLInputElement).value = '');
-            alert("참가자가 추가되었습니다.");
+            resetPlayerRows();
+            alert(`참가자 ${Object.keys(newPlayers).length}명이 추가되었습니다.`);
         } catch (error) {
             console.error(error);
-            alert("참가자 추가에 실패했습니다.");
+            alert('참가자 추가에 실패했습니다.');
         }
     });
 

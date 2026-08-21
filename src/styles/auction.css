@@ -287,6 +287,69 @@ select.bid-input {
     -ms-overflow-style: none;
 }
 
+/* --- 참가자 수동 등록: 표 형태 일괄 입력 (leader-row와 동일한 UX 패턴) --- */
+.player-bulk-modal {
+    max-width: 960px;
+}
+
+/* 헤더/바디 각 칸의 폭을 통일. 필요 시 모달 폭보다 넓어지면 가로 스크롤됨 */
+.player-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #30363d;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.player-table-header,
+.player-row {
+    display: grid;
+    grid-template-columns: 110px 110px 130px 130px 90px 90px 1fr 44px;
+    gap: 6px;
+    align-items: center;
+    min-width: 800px;
+}
+
+.player-table-header {
+    padding: 8px 10px;
+    background: #1e2328;
+    color: #c8aa6e;
+    font-size: 12px;
+    font-weight: bold;
+    border-bottom: 2px solid #c8aa6e;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.player-table-body {
+    /* 표 영역만 내부 스크롤: 헤더와 하단 등록 버튼은 이 스크롤에 영향받지 않음 */
+    max-height: min(360px, 42vh);
+    overflow-y: auto;
+    padding: 8px 10px;
+    background: #0d1117;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.player-table-body::-webkit-scrollbar { display: none; }
+
+.player-row {
+    margin-bottom: 6px;
+}
+
+.player-row input,
+.player-row select {
+    padding: 8px;
+    font-size: 13px;
+    width: 100%;
+}
+
+.player-row .btn-remove-leader {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+}
+
 .scroll-input-area::-webkit-scrollbar {
     display: none;
 }
@@ -1167,6 +1230,20 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
 
 .tier-dropdown-list-container::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
+}
+
+/*
+ * 포탈 모드: document.body로 옮겨져 렌더링되는 드롭다운.
+ * 부모(.player-table-body 등)의 overflow:auto에 잘리지 않도록 fixed로 띄우고,
+ * top/left/width는 JS(renderer.ts)가 입력창의 getBoundingClientRect() 기준으로 매번 계산해 인라인으로 지정한다.
+ * z-index는 모달 오버레이(최대 4000)와 호버 툴팁(10000)보다도 위에 오도록 여유있게 잡는다.
+ */
+.tier-dropdown-list-container.tier-dropdown-portal {
+    position: fixed;
+    top: auto;
+    left: auto;
+    width: auto;
+    z-index: 10001;
 }
 
 .tier-dropdown-list {

@@ -29,7 +29,8 @@ export const HELP_CONTENT = `
     <li>
         <strong>직접 입력을 통한 수동 등록:</strong>
         <ul>
-            <li>별도의 파일 없이 화면의 입력 폼을 통해 선수 정보를 한 명씩 직접 입력하여 등록할 수 있습니다.</li>
+            <li>별도의 파일 없이 화면의 표 형태 입력창을 통해 여러 명의 선수 정보를 한 번에 입력하여 일괄 등록할 수 있습니다.</li>
+            <li>'참가자 추가' 버튼으로 입력 행을 늘리고, 각 행의 삭제 버튼으로 필요 없는 행을 지울 수 있습니다.</li>
             <li>소수의 인원을 추가하거나 긴급하게 수정이 필요한 경우 유용합니다.</li>
         </ul>
     </li>
@@ -63,6 +64,12 @@ export const HELP_CONTENT = `
 export const UPDATE_LOG = `
 <h3>🚀 패치노트</h3>
 <ul class="update-list">
+    <li>
+        <span class="version">v2.0.1</span> <span class="date">2026.08.21</span>
+        <p>- 참가자 수동 등록을 표 형태로 개편, 여러 명을 한 번에 입력해 일괄 등록 가능</p>
+        <p>- 참가자 등록 표에서 티어 자동완성 목록이 화면 밖으로 잘려 보이던 문제 수정</p>
+        <p>- 티어 자동완성 목록 내부 스크롤 시 목록이 의도치 않게 닫히던 문제 수정</p>
+    </li>
     <li>
         <span class="version">v2.0.0</span> <span class="date">2026.08.19</span>
         <p>- 반응형 웹 전면 지원 (모바일 / 태블릿 / 데스크톱)</p>

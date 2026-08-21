@@ -138,60 +138,33 @@
     </div>
   </div>
 
-  <!-- 수동 플레이어 추가 모달 -->
+  <!-- 수동 플레이어 추가 모달 (여러 명 표 형태로 일괄 등록) -->
   <div id="add-player-modal" class="overlay" style="display: none; z-index: 3500;">
-    <div class="modal" style="max-width: 400px;">
+    <div class="modal player-bulk-modal">
         <button class="btn-close-modal" id="btn-close-add-player">×</button>
-        <h2 style="color: #c8aa6e; text-align: center; margin-bottom: 20px;">참가자 수동 등록</h2>
+        <h2 style="color: #c8aa6e; text-align: center; margin-bottom: 8px;">참가자 수동 등록</h2>
+        <p style="text-align:center; color:#8b949e; font-size:12px; margin-bottom: 16px;">
+            <span style="color:#ff4655">*</span> 표시 항목은 필수입니다. 완전히 빈 행은 등록 시 자동으로 무시됩니다.
+        </p>
 
-        <div class="input-group">
-            <label>이름 <span style="color:#ff4655">*</span></label>
-            <input type="text" id="add-p-name" class="bid-input" style="width: 100%; margin-bottom: 10px;" required>
-
-            <label>닉네임 <span style="color:#ff4655">*</span></label>
-            <input type="text" id="add-p-nick" class="bid-input" style="width: 100%; margin-bottom: 10px;">
-
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <div style="flex: 1;">
-                    <label>최고 티어 <span style="color:#ff4655">*</span></label>
-                    <div class="searchable-select-container">
-                        <input type="text" id="add-p-high-tier" class="searchable-select-input bid-input" placeholder="티어 검색 또는 선택" required>
-                        <div class="tier-dropdown-list-container">
-                            <ul class="tier-dropdown-list"></ul>
-                        </div>
-                    </div>
-                </div>
-                <div style="flex: 1;">
-                    <label>현재 티어 <span style="color:#ff4655">*</span></label>
-                    <div class="searchable-select-container">
-                        <input type="text" id="add-p-curr-tier" class="searchable-select-input bid-input" placeholder="티어 검색 또는 선택" required>
-                        <div class="tier-dropdown-list-container">
-                            <ul class="tier-dropdown-list"></ul>
-                        </div>
-                    </div>
-                </div>
+        <div class="player-table-wrap">
+            <div class="player-table-header">
+                <span>이름 <span style="color:#ff4655">*</span></span>
+                <span>닉네임 <span style="color:#ff4655">*</span></span>
+                <span>최고 티어 <span style="color:#ff4655">*</span></span>
+                <span>현재 티어 <span style="color:#ff4655">*</span></span>
+                <span>주 포지션 <span style="color:#ff4655">*</span></span>
+                <span>부 포지션</span>
+                <span>모스트 챔피언</span>
+                <span></span>
             </div>
-
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <div style="flex: 1;">
-                    <label>주 포지션 <span style="color:#ff4655">*</span></label>
-                    <select id="add-p-main-pos" class="bid-input" style="width: 100%;" required>
-                        <option value="" disabled selected>포지션 선택</option>
-                    </select>
-                </div>
-                <div style="flex: 1;">
-                    <label>부 포지션</label>
-                    <select id="add-p-sub-pos" class="bid-input" style="width: 100%;">
-                        <option value="">선택 없음</option>
-                    </select>
-                </div>
+            <div id="add-player-rows" class="player-table-body">
+                <!-- main.ts의 createPlayerRow()가 초기 행 및 추가 행을 동적으로 생성 -->
             </div>
-
-            <label>모스트 챔피언 (콤마로 구분)</label>
-            <input type="text" id="add-p-most" class="bid-input" style="width: 100%; margin-bottom: 20px;" placeholder="예: 아리, 제드, 르블랑">
-
-            <button id="btn-submit-add-player" class="btn-primary">등록하기</button>
         </div>
+
+        <button type="button" id="btn-add-player-row" class="btn-secondary" style="margin-top: 10px;">+ 참가자 추가</button>
+        <button id="btn-submit-add-player" class="btn-primary" style="margin-top: 14px;">일괄 등록</button>
     </div>
   </div>
 
