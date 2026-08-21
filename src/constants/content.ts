@@ -34,6 +34,7 @@ export const HELP_CONTENT = `
             <li>소수의 인원을 추가하거나 긴급하게 수정이 필요한 경우 유용합니다.</li>
         </ul>
     </li>
+    <li>방장은 경매 시작 전까지 등록된 참가자를 클릭해 정보를 수정할 수 있으며, 경매가 시작되면 더 이상 수정할 수 없습니다.</li>
 </ul>
 
 <p><strong>3. 경매 진행</strong></p>
@@ -61,9 +62,19 @@ export const HELP_CONTENT = `
 `;
 
 
+// 패치노트 자동 노출 기능이 "최신 버전" 판단 기준으로 사용하는 값.
+// 아래 UPDATE_LOG에 새 버전 항목을 추가할 때는 이 값도 함께 최신 버전으로 갱신해야 한다.
+export const LATEST_PATCH_VERSION = 'v2.1.0';
+
 export const UPDATE_LOG = `
 <h3>🚀 패치노트</h3>
 <ul class="update-list">
+    <li>
+        <span class="version">v2.1.0</span> <span class="date">2026.08.21</span>
+        <p>- 참가자 상세 정보 모달에 방장 전용 '참가자 정보 수정' 기능 추가</p>
+        <p>- 참가자 정보 공개 범위를 역할·경매 진행 상태와 무관하게 항상 동일하게 통일</p>
+        <p>- 참가자 상세 정보의 티어 텍스트에 티어별 색상 적용</p>
+    </li>
     <li>
         <span class="version">v2.0.1</span> <span class="date">2026.08.21</span>
         <p>- 참가자 수동 등록을 표 형태로 개편, 여러 명을 한 번에 입력해 일괄 등록 가능</p>

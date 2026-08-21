@@ -65,7 +65,31 @@ const closeAllDropdowns = () => {
     dropdownInstances.forEach(({ container }) => { container.style.display = 'none'; });
 };
 
-// 바깥 클릭으로 닫기 / 스크롤 시 닫기 리스너는 인스턴스 개수와 무관하게 딱 한 번만 등록한다.
+/*
+ * 열려있는 드롭다운들의 위치를 입력창의 최신 getBoundingClientRect() 기준으로 다시 계산한다.
+ * 입력창이 더 이상 화면에 정상적으로 보이지 않는 상태(예: 크기가 0이거나 뷰포트 위/아래로
+ * 완전히 벗어남)라면 위치를 맞춰봐야 의미가 없으므로 그 경우엔 닫는다.
+ */
+const repositionOpenDropdowns = () => {
+    dropdownInstances.forEach(({ input, container }) => {
+        if (container.style.display === 'none') return;
+        const rect = input.getBoundingClientRect();
+        const stillVisible = rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight;
+        if (!stillVisible) {
+            container.style.display = 'none';
+            return;
+        }
+        positionDropdown(input, container);
+    });
+};
+
+// 드롭다운을 연 시각(성능 타임스탬프). 바깥 스크롤이 이 시각 직후에 발생했다면
+// "모바일에서 입력창 포커스 시 브라우저가 자동으로 스크롤해 보이게 하는 동작"으로 간주한다.
+let lastDropdownOpenedAt = 0;
+// 이 시간 안에 발생한 바깥 스크롤은 닫지 않고 위치만 재계산한다.
+const SCROLL_INTO_VIEW_GRACE_MS = 500;
+
+// 바깥 클릭으로 닫기 / 스크롤·리사이즈 대응 리스너는 인스턴스 개수와 무관하게 딱 한 번만 등록한다.
 let globalDropdownListenersAttached = false;
 const attachGlobalDropdownListeners = () => {
     if (globalDropdownListenersAttached) return;
@@ -83,16 +107,28 @@ const attachGlobalDropdownListeners = () => {
     // capture:true — .player-table-body 같은 내부 스크롤 컨테이너의 scroll 이벤트는 버블링되지 않으므로
     // 캡처 단계에서 잡아야 한다.
     window.addEventListener('scroll', (e) => {
-        const target = e.target as Node;
+        // 합성 이벤트 등으로 target이 Node가 아닌 경우(예: window 자체) contains() 호출이 예외를
+        // 던지므로 방어적으로 처리. 이 경우 "드롭다운 내부 스크롤"로 볼 수 없으니 바깥 스크롤로 취급.
+        const target = e.target instanceof Node ? e.target : null;
         // 드롭다운 목록 자체(티어가 많아 내부 스크롤이 걸리는 경우) 안에서 발생한 스크롤은
         // "바깥 스크롤"이 아니므로 아무 것도 닫지 않는다 — 스크롤한 그 드롭다운뿐 아니라
         // 동시에 열려있는 다른 드롭다운(있다면)까지 덩달아 닫혀버리면 안 되기 때문.
-        const scrolledInsideDropdown = dropdownInstances.some(({ container }) => container.contains(target));
+        const scrolledInsideDropdown = target !== null && dropdownInstances.some(({ container }) => container.contains(target));
         if (scrolledInsideDropdown) return;
+
+        if (performance.now() - lastDropdownOpenedAt < SCROLL_INTO_VIEW_GRACE_MS) {
+            // 방금 연 직후의 스크롤 -> 모바일 키보드가 뜨면서 브라우저가 입력창을 보이게 하려고
+            // 자동으로 스크롤한 경우일 가능성이 높다. 이 경우 닫아버리면 포커스만으로는 목록이
+            // 아예 안 보이는 것처럼 느껴지므로, 닫지 않고 위치만 다시 맞춘다.
+            repositionOpenDropdowns();
+            return;
+        }
         closeAllDropdowns();
     }, true);
-    // 창 크기 변경 시에는 좌표가 어긋나므로 예외 없이 전부 닫는다.
-    window.addEventListener('resize', closeAllDropdowns);
+
+    // 창 크기 변경(모바일 주소창 표시/숨김에 따른 뷰포트 변화 포함): 닫지 않고 위치를 다시 계산해
+    // 화면 밖으로 벗어나거나 엉뚱한 위치에 남지 않도록 한다.
+    window.addEventListener('resize', repositionOpenDropdowns);
 };
 
 // 검색 가능한 셀렉트 박스 초기화 함수
@@ -123,6 +159,7 @@ const setupSearchableSelect = (input: HTMLInputElement, data: string[]) => {
     const openDropdown = () => {
         positionDropdown(input, dropdownContainer);
         dropdownContainer.style.display = 'block';
+        lastDropdownOpenedAt = performance.now();
     };
 
     input.addEventListener('focus', () => {

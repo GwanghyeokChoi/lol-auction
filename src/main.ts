@@ -6,7 +6,7 @@ import { RoomService } from './services/roomService';
 import { Renderer } from './ui/renderer';
 import { CSVService } from './services/csvService';
 import { PRIVACY_POLICY, TERMS_OF_SERVICE } from './constants/terms';
-import { HELP_CONTENT, UPDATE_LOG } from './constants/content';
+import { HELP_CONTENT, UPDATE_LOG, LATEST_PATCH_VERSION } from './constants/content';
 import { TimerUtils } from './utils/timer';
 import { escapeHtml } from './utils/sanitize';
 import { buildPlayersFromRows, type PlayerRowInput } from './utils/playerRows';
@@ -69,17 +69,33 @@ window.addEventListener('DOMContentLoaded', () => {
         if (helpModal) helpModal.style.display = 'none';
     });
 
+    // --- [패치노트 모달: 수동 열기 + 신규 버전 자동 노출] ---
+    const LAST_SEEN_PATCH_KEY = 'lastSeenPatchVersion';
     const updateModal = document.getElementById('update-modal');
     const updateContent = document.getElementById('update-content');
-    document.getElementById('btn-open-update')?.addEventListener('click', () => {
+
+    const openUpdateModal = () => {
         if (updateModal && updateContent) {
             updateContent.innerHTML = UPDATE_LOG;
             updateModal.style.display = 'flex';
         }
-    });
+    };
+    // 모달을 닫거나(X) 확인한 시점의 최신 버전을 저장 -> 그 버전에 대해서는 다시 자동으로 뜨지 않음
+    const markPatchNoteAsSeen = () => {
+        localStorage.setItem(LAST_SEEN_PATCH_KEY, LATEST_PATCH_VERSION);
+    };
+
+    document.getElementById('btn-open-update')?.addEventListener('click', openUpdateModal);
     document.getElementById('btn-close-update')?.addEventListener('click', () => {
         if (updateModal) updateModal.style.display = 'none';
+        markPatchNoteAsSeen();
     });
+
+    // 메인(랜딩) 페이지 접속 시, 아직 확인하지 않은 새 버전의 패치노트가 있으면 자동으로 띄운다.
+    // 경매방에 직접 링크로 입장한 경우(currentRoomId 있음)는 진행 중인 화면을 가리지 않도록 대상에서 제외.
+    if (!currentRoomId && localStorage.getItem(LAST_SEEN_PATCH_KEY) !== LATEST_PATCH_VERSION) {
+        openUpdateModal();
+    }
 
     // --- [Landing Page Events] ---
     document.getElementById('btn-go-setup')?.addEventListener('click', () => {

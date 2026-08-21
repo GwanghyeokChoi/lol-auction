@@ -295,6 +295,7 @@ select.bid-input {
 /* 헤더/바디 각 칸의 폭을 통일. 필요 시 모달 폭보다 넓어지면 가로 스크롤됨 */
 .player-table-wrap {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     border: 1px solid #30363d;
     border-radius: 4px;
     margin-bottom: 10px;
@@ -322,9 +323,24 @@ select.bid-input {
 }
 
 .player-table-body {
-    /* 표 영역만 내부 스크롤: 헤더와 하단 등록 버튼은 이 스크롤에 영향받지 않음 */
+    /* 표 영역만 내부 세로 스크롤: 헤더와 하단 등록 버튼은 이 스크롤에 영향받지 않음 */
     max-height: min(360px, 42vh);
     overflow-y: auto;
+    /*
+     * [중요] CSS 스펙상 overflow-y가 visible이 아니면 overflow-x는 "visible로 명시해도"
+     * 브라우저가 computed value 단계에서 강제로 auto로 바꿔버린다(overflow-x:visible을
+     * 써도 무시됨 - 단순 상속 문제가 아니라 스펙에 정의된 강제 변환). 그래서 이 요소는
+     * 항상 자기 자신만의 독립적인 가로 스크롤 컨테이너가 될 수밖에 없다.
+     *
+     * 우회책: 이 요소 "내부"에서 가로 오버플로 자체가 생기지 않게 만든다. 자식 .player-row가
+     * min-width:800px이므로, 이 요소도 동일하게 min-width를 줘서 자식과 폭을 맞추면
+     * 내부적으로 넘치는 콘텐츠가 없어진다. 그러면 가로 오버플로는 이 요소가 아니라
+     * (자기보다 커진) 이 요소를 담고 있는 .player-table-wrap 쪽에서 발생하고, 그 wrap의
+     * overflow-x:auto 하나만 가로 스크롤을 담당하게 되어 헤더/본문이 항상 함께 움직인다.
+     * box-sizing:border-box이고 좌우 padding이 10px씩(20px) 있으므로, .player-row의
+     * min-width(800px)를 콘텐츠 박스로 확보하려면 여기 min-width는 820px이어야 한다.
+     */
+    min-width: 820px;
     padding: 8px 10px;
     background: #0d1117;
     scrollbar-width: none;
