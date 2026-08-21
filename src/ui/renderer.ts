@@ -32,17 +32,79 @@ const getTierColor = (tier: string): string => {
     return '#fff'; // 기본값
 };
 
-// 검색 가능한 셀렉트 박스 초기화 함수
-const setupSearchableSelect = (inputId: string, containerClass: string, data: string[]) => {
-    const input = document.getElementById(inputId) as HTMLInputElement;
-    const dropdownContainer = input.nextElementSibling as HTMLElement;
-    // containerClass가 유효하면 검증 용도로 사용할 수 있으나 현재 구조에서는 nextElementSibling이 컨테이너임
-    // 경고를 해결하기 위해 클래스명을 콘솔에 찍거나 검증에 사용 (여기서는 단순 확인)
-    if (!dropdownContainer.classList.contains(containerClass)) {
-        console.warn(`Dropdown container missing class: ${containerClass}`);
-    }
+/*
+ * [드롭다운 포탈 방식]
+ * .tier-dropdown-list-container는 원래 .searchable-select-container(position:relative) 안에
+ * position:absolute로 떠 있었는데, 참가자 일괄 등록 표처럼 부모가 overflow-y:auto인 스크롤
+ * 컨테이너(.player-table-body) 안에 들어가면 그 경계에서 잘려 보이지 않는 문제가 있었다.
+ * (네이티브 <select>는 브라우저가 별도 레이어에 그려서 이 문제가 없지만, 커스텀 드롭다운은
+ * 부모의 overflow에 종속된다.)
+ *
+ * 해결: setupSearchableSelect가 각 입력창의 드롭다운 컨테이너를 초기화 시점에 document.body로
+ * 옮기고(포탈) position:fixed로 띄운다. 열릴 때마다 입력창의 getBoundingClientRect() 기준으로
+ * top/left/width를 계산해 그 아래 붙이므로 어떤 스크롤 컨테이너 안에 있든 잘리지 않는다.
+ * 스크롤이 발생하면 좌표가 즉시 어긋나므로(매 스크롤마다 재계산하는 대신) 간단히 닫아버린다.
+ */
+interface TierDropdownInstance {
+    input: HTMLInputElement;
+    container: HTMLElement;
+}
 
+// 현재까지 setupSearchableSelect로 초기화된 모든 (입력창, 드롭다운) 쌍.
+// 바깥 클릭 감지 / 스크롤 시 닫기 전역 리스너가 이 목록을 순회한다.
+const dropdownInstances: TierDropdownInstance[] = [];
+
+const positionDropdown = (input: HTMLInputElement, container: HTMLElement) => {
+    const rect = input.getBoundingClientRect();
+    container.style.top = `${rect.bottom}px`;
+    container.style.left = `${rect.left}px`;
+    container.style.width = `${rect.width}px`;
+};
+
+const closeAllDropdowns = () => {
+    dropdownInstances.forEach(({ container }) => { container.style.display = 'none'; });
+};
+
+// 바깥 클릭으로 닫기 / 스크롤 시 닫기 리스너는 인스턴스 개수와 무관하게 딱 한 번만 등록한다.
+let globalDropdownListenersAttached = false;
+const attachGlobalDropdownListeners = () => {
+    if (globalDropdownListenersAttached) return;
+    globalDropdownListenersAttached = true;
+
+    document.addEventListener('click', (e) => {
+        const target = e.target as Node;
+        dropdownInstances.forEach(({ input, container }) => {
+            if (container.style.display !== 'none' && !input.contains(target) && !container.contains(target)) {
+                container.style.display = 'none';
+            }
+        });
+    });
+
+    // capture:true — .player-table-body 같은 내부 스크롤 컨테이너의 scroll 이벤트는 버블링되지 않으므로
+    // 캡처 단계에서 잡아야 한다.
+    window.addEventListener('scroll', (e) => {
+        const target = e.target as Node;
+        // 드롭다운 목록 자체(티어가 많아 내부 스크롤이 걸리는 경우) 안에서 발생한 스크롤은
+        // "바깥 스크롤"이 아니므로 아무 것도 닫지 않는다 — 스크롤한 그 드롭다운뿐 아니라
+        // 동시에 열려있는 다른 드롭다운(있다면)까지 덩달아 닫혀버리면 안 되기 때문.
+        const scrolledInsideDropdown = dropdownInstances.some(({ container }) => container.contains(target));
+        if (scrolledInsideDropdown) return;
+        closeAllDropdowns();
+    }, true);
+    // 창 크기 변경 시에는 좌표가 어긋나므로 예외 없이 전부 닫는다.
+    window.addEventListener('resize', closeAllDropdowns);
+};
+
+// 검색 가능한 셀렉트 박스 초기화 함수
+// (요소를 직접 받는다: 고정 ID 하나뿐 아니라 동적으로 추가되는 행의 입력칸에도 재사용하기 위함)
+const setupSearchableSelect = (input: HTMLInputElement, data: string[]) => {
+    const dropdownContainer = input.nextElementSibling as HTMLElement;
     const dropdownList = dropdownContainer.querySelector('ul') as HTMLUListElement;
+
+    // 포탈: body 최상위로 이동시키고 fixed 포지셔닝으로 전환
+    dropdownContainer.classList.add('tier-dropdown-portal');
+    document.body.appendChild(dropdownContainer);
+    dropdownInstances.push({ input, container: dropdownContainer });
 
     const populateList = (filter = '') => {
         dropdownList.innerHTML = '';
@@ -58,47 +120,56 @@ const setupSearchableSelect = (inputId: string, containerClass: string, data: st
         });
     };
 
+    const openDropdown = () => {
+        positionDropdown(input, dropdownContainer);
+        dropdownContainer.style.display = 'block';
+    };
+
     input.addEventListener('focus', () => {
         populateList();
-        dropdownContainer.style.display = 'block';
+        openDropdown();
     });
 
     input.addEventListener('input', () => {
         populateList(input.value);
-        dropdownContainer.style.display = 'block';
+        openDropdown();
     });
 
-    document.addEventListener('click', (e) => {
-        if (!input.contains(e.target as Node) && !dropdownContainer.contains(e.target as Node)) {
-            dropdownContainer.style.display = 'none';
-        }
-    });
+    attachGlobalDropdownListeners();
 };
 
 
 export const Renderer = {
-    // 0. 모달 셀렉트 옵션 동적 생성
-    populateSelectOptions() {
-        // 티어 검색형 셀렉트 박스 초기화
-        setupSearchableSelect('add-p-high-tier', 'tier-dropdown-list-container', TIERS);
-        setupSearchableSelect('add-p-curr-tier', 'tier-dropdown-list-container', TIERS);
+    // 0. 참가자 수동 등록 표는 행이 전부 동적으로 생성된다(초기 행 포함 - main.ts의 createPlayerRow 참고).
+    //    행을 만들 때마다 아래 두 헬퍼를 그 자리에서 직접 호출해 티어 자동완성/포지션 옵션을 연결한다.
 
-        // 포지션 일반 셀렉트 박스
-        const mainPosSelect = document.getElementById('add-p-main-pos') as HTMLSelectElement;
-        const subPosSelect = document.getElementById('add-p-sub-pos') as HTMLSelectElement;
+    /*
+     * 포탈된 드롭다운은 더 이상 원래 행(.player-row) 안에 있지 않으므로, 행을 통째로 삭제해도
+     * 함께 사라지지 않고 document.body에 고아로 남는다(참가자 추가/삭제를 반복할수록 누적됨).
+     * 행을 삭제하기 직전에 반드시 호출해 포탈 요소와 dropdownInstances 등록을 함께 정리한다.
+     */
+    detachTierAutocomplete(input: HTMLInputElement) {
+        const idx = dropdownInstances.findIndex((d) => d.input === input);
+        if (idx === -1) return;
+        dropdownInstances[idx].container.remove();
+        dropdownInstances.splice(idx, 1);
+    },
 
-        if (mainPosSelect) {
-            POSITIONS.forEach(pos => {
-                const option = new Option(pos, pos);
-                mainPosSelect.add(option);
-            });
-        }
-        if (subPosSelect) {
-            POSITIONS.forEach(pos => {
-                const option = new Option(pos, pos);
-                subPosSelect.add(option);
-            });
-        }
+    // 티어 검색형 자동완성을 특정 입력칸에 연결
+    attachTierAutocomplete(input: HTMLInputElement) {
+        setupSearchableSelect(input, TIERS);
+    },
+
+    // 포지션 <option> 목록을 특정 select에 채워 넣음 (동적으로 추가된 행용)
+    populatePositionOptions(select: HTMLSelectElement) {
+        POSITIONS.forEach(pos => {
+            select.add(new Option(pos, pos));
+        });
+    },
+
+    // 티어별 색상 (선수 상세 정보 모달 등 renderer.ts 바깥에서도 동일한 색상표를 쓰기 위해 노출)
+    getTierColor(tier: string): string {
+        return getTierColor(tier);
     },
 
     // 1. 좌측 플레이어 리스트 (경매 순서)

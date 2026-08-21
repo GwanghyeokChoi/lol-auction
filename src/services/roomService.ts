@@ -30,6 +30,12 @@ export const RoomService = {
         await set(ref(db, `rooms/${roomId}/live/playerOrder`), []);
     },
 
+    // 2-1. 참가자 정보 수정 (상세 모달의 "정보 수정") - 해당 선수 한 명의 필드만 targeted update.
+    // players 노드 전체를 덮어쓰지 않으므로 status 등 다른 필드나 다른 선수 데이터는 건드리지 않는다.
+    async updatePlayer(roomId: string, playerId: string, fields: Partial<Player>) {
+        await update(ref(db, `rooms/${roomId}/players/${playerId}`), fields);
+    },
+
     // 3. 방장이 '경매 시작' 버튼 클릭 시 랜덤 순서 확정
     async startAuctionProcess(roomId: string) {
         const snap = await get(ref(db, `rooms/${roomId}`));

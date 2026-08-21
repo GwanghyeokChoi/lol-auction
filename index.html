@@ -135,27 +135,32 @@
       <button class="btn-close-modal" id="btn-close-player-modal">×</button>
       <h2 id="player-modal-name" style="color: #c8aa6e; text-align: center; margin-bottom: 10px;">선수 정보</h2>
       <div id="player-modal-detail" style="color: #fff;"></div>
+      <!-- 방장 전용: 경매 시작 전에만 노출되는 정보 수정 영역 (역할/상태에 따라 main.ts가 표시 여부를 제어) -->
+      <div id="player-modal-admin-zone" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid #333; text-align:center;">
+        <p id="player-modal-admin-notice" style="font-size:13px; color:#8b949e; margin-bottom:10px;"></p>
+        <button type="button" id="btn-open-edit-player" class="btn-secondary" style="display:none;">참가자 정보 수정</button>
+      </div>
     </div>
   </div>
 
-  <!-- 수동 플레이어 추가 모달 -->
-  <div id="add-player-modal" class="overlay" style="display: none; z-index: 3500;">
+  <!-- 참가자 정보 수정 모달 (상세 정보 모달에서 방장이 "참가자 정보 수정" 클릭 시) -->
+  <div id="edit-player-modal" class="overlay" style="display: none; z-index: 3600;">
     <div class="modal" style="max-width: 400px;">
-        <button class="btn-close-modal" id="btn-close-add-player">×</button>
-        <h2 style="color: #c8aa6e; text-align: center; margin-bottom: 20px;">참가자 수동 등록</h2>
+        <button class="btn-close-modal" id="btn-close-edit-player">×</button>
+        <h2 style="color: #c8aa6e; text-align: center; margin-bottom: 20px;">참가자 정보 수정</h2>
 
         <div class="input-group">
             <label>이름 <span style="color:#ff4655">*</span></label>
-            <input type="text" id="add-p-name" class="bid-input" style="width: 100%; margin-bottom: 10px;" required>
+            <input type="text" id="edit-p-name" class="bid-input" style="width: 100%; margin-bottom: 10px;">
 
             <label>닉네임 <span style="color:#ff4655">*</span></label>
-            <input type="text" id="add-p-nick" class="bid-input" style="width: 100%; margin-bottom: 10px;">
+            <input type="text" id="edit-p-nick" class="bid-input" style="width: 100%; margin-bottom: 10px;">
 
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <div style="flex: 1;">
                     <label>최고 티어 <span style="color:#ff4655">*</span></label>
                     <div class="searchable-select-container">
-                        <input type="text" id="add-p-high-tier" class="searchable-select-input bid-input" placeholder="티어 검색 또는 선택" required>
+                        <input type="text" id="edit-p-high-tier" class="searchable-select-input bid-input" placeholder="티어 검색 또는 선택">
                         <div class="tier-dropdown-list-container">
                             <ul class="tier-dropdown-list"></ul>
                         </div>
@@ -164,7 +169,7 @@
                 <div style="flex: 1;">
                     <label>현재 티어 <span style="color:#ff4655">*</span></label>
                     <div class="searchable-select-container">
-                        <input type="text" id="add-p-curr-tier" class="searchable-select-input bid-input" placeholder="티어 검색 또는 선택" required>
+                        <input type="text" id="edit-p-curr-tier" class="searchable-select-input bid-input" placeholder="티어 검색 또는 선택">
                         <div class="tier-dropdown-list-container">
                             <ul class="tier-dropdown-list"></ul>
                         </div>
@@ -175,23 +180,53 @@
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <div style="flex: 1;">
                     <label>주 포지션 <span style="color:#ff4655">*</span></label>
-                    <select id="add-p-main-pos" class="bid-input" style="width: 100%;" required>
-                        <option value="" disabled selected>포지션 선택</option>
+                    <select id="edit-p-main-pos" class="bid-input" style="width: 100%;">
+                        <option value="" selected>포지션 선택</option>
                     </select>
                 </div>
                 <div style="flex: 1;">
                     <label>부 포지션</label>
-                    <select id="add-p-sub-pos" class="bid-input" style="width: 100%;">
+                    <select id="edit-p-sub-pos" class="bid-input" style="width: 100%;">
                         <option value="">선택 없음</option>
                     </select>
                 </div>
             </div>
 
             <label>모스트 챔피언 (콤마로 구분)</label>
-            <input type="text" id="add-p-most" class="bid-input" style="width: 100%; margin-bottom: 20px;" placeholder="예: 아리, 제드, 르블랑">
+            <input type="text" id="edit-p-most" class="bid-input" style="width: 100%; margin-bottom: 20px;" placeholder="예: 아리, 제드, 르블랑">
 
-            <button id="btn-submit-add-player" class="btn-primary">등록하기</button>
+            <button id="btn-submit-edit-player" class="btn-primary">저장</button>
         </div>
+    </div>
+  </div>
+
+  <!-- 수동 플레이어 추가 모달 (여러 명 표 형태로 일괄 등록) -->
+  <div id="add-player-modal" class="overlay" style="display: none; z-index: 3500;">
+    <div class="modal player-bulk-modal">
+        <button class="btn-close-modal" id="btn-close-add-player">×</button>
+        <h2 style="color: #c8aa6e; text-align: center; margin-bottom: 8px;">참가자 수동 등록</h2>
+        <p style="text-align:center; color:#8b949e; font-size:12px; margin-bottom: 16px;">
+            <span style="color:#ff4655">*</span> 표시 항목은 필수입니다. 완전히 빈 행은 등록 시 자동으로 무시됩니다.
+        </p>
+
+        <div class="player-table-wrap">
+            <div class="player-table-header">
+                <span>이름 <span style="color:#ff4655">*</span></span>
+                <span>닉네임 <span style="color:#ff4655">*</span></span>
+                <span>최고 티어 <span style="color:#ff4655">*</span></span>
+                <span>현재 티어 <span style="color:#ff4655">*</span></span>
+                <span>주 포지션 <span style="color:#ff4655">*</span></span>
+                <span>부 포지션</span>
+                <span>모스트 챔피언</span>
+                <span></span>
+            </div>
+            <div id="add-player-rows" class="player-table-body">
+                <!-- main.ts의 createPlayerRow()가 초기 행 및 추가 행을 동적으로 생성 -->
+            </div>
+        </div>
+
+        <button type="button" id="btn-add-player-row" class="btn-secondary" style="margin-top: 10px;">+ 참가자 추가</button>
+        <button id="btn-submit-add-player" class="btn-primary" style="margin-top: 14px;">일괄 등록</button>
     </div>
   </div>
 

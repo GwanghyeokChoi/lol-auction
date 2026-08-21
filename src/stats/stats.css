@@ -1,0 +1,550 @@
+/* stats.html 전용 스타일. auction.css를 import하지 않고 톤(색상/폰트)만 맞춰 독립적으로 작성. */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background-color: #010a13;
+    color: #f0e6d2;
+    font-family: 'Pretendard', -apple-system, sans-serif;
+    line-height: 1.5;
+    padding: 24px;
+    min-height: 100vh;
+}
+
+.page {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+h1 {
+    color: #c8aa6e;
+    font-size: 24px;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.page-sub {
+    color: #8b949e;
+    font-size: 13px;
+    margin-bottom: 24px;
+}
+
+h2 {
+    color: #c8aa6e;
+    font-size: 16px;
+    margin: 32px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #c8aa6e;
+}
+
+h3 {
+    color: #c8aa6e;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+/* --- 업로드 영역 --- */
+.upload-box {
+    background: #1c1c1f;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 28px;
+    text-align: center;
+}
+
+.upload-box p {
+    color: #ccc;
+    font-size: 14px;
+    margin-bottom: 16px;
+}
+
+.upload-box .privacy-note {
+    color: #8b949e;
+    font-size: 12px;
+    margin-top: 14px;
+    line-height: 1.6;
+}
+
+input[type="file"] {
+    color: #f0e6d2;
+    font-size: 13px;
+}
+
+input[type="file"]::file-selector-button {
+    background: #c8aa6e;
+    color: #010a13;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-right: 12px;
+}
+
+/* --- 텍스트 직접 붙여넣기 --- */
+.input-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 22px 0 18px;
+    color: #8b949e;
+    font-size: 12px;
+}
+
+.input-divider::before,
+.input-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #30363d;
+}
+
+#json-textarea {
+    display: block;
+    width: 100%;
+    /* 고정 높이 + 내부 스크롤: 대용량 JSON을 붙여넣어도 페이지 레이아웃이 밀리지 않는다 */
+    height: 340px;
+    overflow-y: auto;
+    resize: vertical;
+    padding: 12px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 4px;
+    color: #f0e6d2;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    outline: none;
+    white-space: pre;
+    tab-size: 2;
+}
+
+#json-textarea:focus {
+    border-color: #c8aa6e;
+    box-shadow: 0 0 8px rgba(200, 170, 110, 0.35);
+}
+
+#json-textarea::placeholder {
+    color: #484f58;
+}
+
+.btn-render {
+    margin-top: 12px;
+    background: #c8aa6e;
+    color: #010a13;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.btn-render:hover { background: #e0c286; }
+
+.btn-render:disabled {
+    background: #30363d;
+    color: #8b949e;
+    cursor: not-allowed;
+}
+
+/* --- 로딩 인디케이터 --- */
+.loading-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+    padding: 28px;
+    background: #1c1c1f;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    color: #c8aa6e;
+    font-size: 14px;
+}
+
+.spinner {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border: 2px solid #30363d;
+    border-top-color: #c8aa6e;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.error-box {
+    display: none;
+    background: rgba(255, 70, 85, 0.1);
+    border: 1px solid #ff4655;
+    color: #ff4655;
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-top: 16px;
+    font-size: 13px;
+    white-space: pre-wrap;
+}
+
+.error-box.visible { display: block; }
+
+.hidden { display: none !important; }
+
+/* --- 요약 카드 --- */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.stat-card {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 14px 16px;
+}
+
+.stat-card .label {
+    color: #8b949e;
+    font-size: 12px;
+    margin-bottom: 6px;
+}
+
+.stat-card .value {
+    color: #fff;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.stat-card .value.gold { color: #c8aa6e; }
+.stat-card .value.green { color: #3fb950; }
+.stat-card .value.red { color: #ff4655; }
+
+/* --- 분포 바 --- */
+.dist-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+/* 게이지(채워진 미터) 스타일 분포 */
+.gauge-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.gauge-label {
+    width: 44px;
+    flex-shrink: 0;
+    color: #8b949e;
+    font-size: 12px;
+    text-align: right;
+}
+
+.gauge-track {
+    position: relative;
+    flex: 1;
+    height: 22px;
+    border-radius: 11px;
+    /* 값이 0이어도 트랙(빈 배경)은 항상 보인다 */
+    background: #161b22;
+    box-shadow: inset 0 0 0 1px #262c34;
+    overflow: hidden;
+}
+
+.gauge-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    border-radius: 11px;
+    background: linear-gradient(90deg, #c8aa6e, #e0c286);
+}
+
+.gauge-value {
+    position: absolute;
+    right: 10px;
+    top: 0;
+    line-height: 22px;
+    font-size: 11px;
+    font-weight: bold;
+    color: #f0e6d2;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+/* --- 기간별 누적 막대 그래프 --- */
+.chart-box {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 16px 16px 10px;
+}
+
+.chart-range {
+    color: #8b949e;
+    font-size: 11px;
+    margin-bottom: 10px;
+}
+
+.chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 260px;
+}
+
+.chart-col {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.chart-count {
+    height: 16px;
+    flex-shrink: 0;
+    text-align: center;
+    font-size: 10px;
+    color: #8b949e;
+}
+
+/* 막대가 자라는 영역: 바닥 정렬 */
+.chart-bar-area {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: flex-end;
+}
+
+.chart-stack {
+    width: 100%;
+    min-height: 2px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 3px 3px 0 0;
+    overflow: hidden;
+}
+
+/* 위=미완료(빨강), 아래=완료(초록) 순으로 쌓기 위해 미완료를 먼저 배치 */
+.chart-seg { width: 100%; }
+.chart-seg.incomplete { background: #ff4655; order: 1; }
+.chart-seg.complete   { background: #3fb950; order: 2; }
+
+.chart-label {
+    height: 34px;
+    flex-shrink: 0;
+    padding-top: 4px;
+    font-size: 9px;
+    color: #8b949e;
+    text-align: center;
+    white-space: nowrap;
+    transform: rotate(-55deg);
+    transform-origin: center top;
+}
+
+.chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: #ccc;
+}
+
+.legend-item { display: flex; align-items: center; gap: 6px; }
+
+.legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+.legend-swatch.complete { background: #3fb950; }
+.legend-swatch.incomplete { background: #ff4655; }
+
+.legend-note { color: #666; font-size: 11px; margin-left: auto; }
+
+.agg-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.agg-tab-btn {
+    background: #21262d;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.agg-tab-btn.active {
+    background: #c8aa6e;
+    color: #010a13;
+    border-color: #c8aa6e;
+    font-weight: bold;
+}
+
+/* --- 방 상세 목록 --- */
+.room-details {
+    background: #1c1c1f;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.room-details > summary {
+    cursor: pointer;
+    padding: 12px 16px;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #f0e6d2;
+}
+
+.room-details > summary::-webkit-details-marker { display: none; }
+
+.room-details > summary:hover { background: rgba(200, 170, 110, 0.06); }
+
+.room-details > summary .room-id {
+    color: #c8aa6e;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.room-details > summary .room-meta {
+    color: #8b949e;
+    font-size: 12px;
+}
+
+.room-body {
+    padding: 4px 16px 16px;
+    border-top: 1px solid #30363d;
+}
+
+.room-info-line {
+    font-size: 12px;
+    color: #8b949e;
+    margin: 6px 0;
+}
+
+.room-info-line strong { color: #ccc; }
+
+.team-block {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin: 8px 0;
+}
+
+.team-block .team-leader {
+    color: #c8aa6e;
+    font-weight: bold;
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+
+.team-block ul, .player-flat-list {
+    list-style: none;
+    font-size: 12px;
+    color: #ccc;
+}
+
+.team-block li, .player-flat-list li {
+    padding: 3px 0;
+    border-bottom: 1px solid #222;
+}
+
+.team-block li:last-child, .player-flat-list li:last-child { border-bottom: none; }
+
+.tier-tag {
+    display: inline-block;
+    background: #333;
+    color: #c8aa6e;
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 11px;
+    margin-left: 6px;
+}
+
+.status-tag {
+    display: inline-block;
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 11px;
+    margin-left: 6px;
+}
+
+.status-tag.sold { background: rgba(200,170,110,0.15); color: #c8aa6e; }
+.status-tag.passed { background: rgba(255,70,85,0.15); color: #ff4655; }
+.status-tag.waiting { background: rgba(139,148,158,0.15); color: #8b949e; }
+.status-tag.bidding { background: rgba(0,188,255,0.15); color: #00bcff; }
+
+.log-list {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid #30363d;
+    border-radius: 4px;
+    padding: 10px 12px;
+    max-height: 260px;
+    overflow-y: auto;
+    font-size: 12px;
+    color: #ccc;
+}
+
+.log-list .log-item {
+    padding: 2px 0;
+    border-bottom: 1px solid #222;
+}
+
+.log-list .log-item:last-child { border-bottom: none; }
+
+.log-list .log-time {
+    color: #555;
+    margin-right: 6px;
+}
+
+.log-list .log-item strong { color: #c8aa6e; }
+.log-list .log-item .amt { color: #ff4655; font-weight: bold; }
+
+.empty-note {
+    color: #666;
+    font-size: 12px;
+    font-style: italic;
+}
+
+.list-note {
+    color: #8b949e;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+.muted { color: #666; }
+
+/* 요약 카드 라벨 옆 도움말 아이콘 (title 속성으로 설명 노출) */
+.hint {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #30363d;
+    color: #c9d1d9;
+    font-size: 9px;
+    cursor: help;
+    vertical-align: middle;
+}

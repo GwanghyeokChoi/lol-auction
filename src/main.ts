@@ -9,6 +9,7 @@ import { PRIVACY_POLICY, TERMS_OF_SERVICE } from './constants/terms';
 import { HELP_CONTENT, UPDATE_LOG } from './constants/content';
 import { TimerUtils } from './utils/timer';
 import { escapeHtml } from './utils/sanitize';
+import { buildPlayersFromRows, type PlayerRowInput } from './utils/playerRows';
 
 const urlParams = new URLSearchParams(window.location.search);
 const currentRoomId = urlParams.get('id');
@@ -16,14 +17,13 @@ const userRole = urlParams.get('role') || 'viewer';
 
 // 최신 데이터 상태 저장용 (타이머 트리거를 위해)
 let latestData: any = null;
+// 선수 상세 정보 모달에서 "참가자 정보 수정"을 눌렀을 때 어떤 선수를 수정 중인지 추적
+let currentInfoPlayerId: string | null = null;
 
 // 서버 시간 오프셋 초기화
 TimerUtils.initServerTimeOffset();
 
 window.addEventListener('DOMContentLoaded', () => {
-    // 모달 옵션 동적 생성
-    Renderer.populateSelectOptions();
-
     const landingScreen = document.getElementById('landing-screen') as HTMLElement;
     const setupScreen = document.getElementById('setup-screen') as HTMLElement;
     const modalStep1 = document.getElementById('modal-step-1') as HTMLElement;
@@ -434,8 +434,70 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- [수동 참가자 추가 로직] ---
+    // --- [수동 참가자 일괄 등록 로직] ---
+    // 참가자 1명당 한 행(row)인 표 형태. leader-row(+팀장 추가/-삭제)와 동일한 UX 패턴을 재사용한다.
     const addPlayerModal = document.getElementById('add-player-modal');
+    const addPlayerRowsContainer = document.getElementById('add-player-rows') as HTMLElement;
+    const INITIAL_PLAYER_ROWS = 4;
+
+    // 한 행을 생성. "+참가자 추가" 클릭 시와 모달 초기화(최초 진입/등록 성공 후) 시 동일하게 사용한다.
+    const createPlayerRow = (): HTMLDivElement => {
+        const row = document.createElement('div');
+        row.className = 'player-row';
+        row.innerHTML = `
+            <input type="text" class="p-name-input bid-input" placeholder="이름">
+            <input type="text" class="p-nick-input bid-input" placeholder="닉네임">
+            <div class="searchable-select-container">
+                <input type="text" class="p-hightier-input searchable-select-input bid-input" placeholder="티어 검색">
+                <div class="tier-dropdown-list-container"><ul class="tier-dropdown-list"></ul></div>
+            </div>
+            <div class="searchable-select-container">
+                <input type="text" class="p-currtier-input searchable-select-input bid-input" placeholder="티어 검색">
+                <div class="tier-dropdown-list-container"><ul class="tier-dropdown-list"></ul></div>
+            </div>
+            <select class="p-mainpos-select bid-input">
+                <option value="" selected>선택</option>
+            </select>
+            <select class="p-subpos-select bid-input">
+                <option value="">없음</option>
+            </select>
+            <input type="text" class="p-most-input bid-input" placeholder="아리, 제드, 르블랑">
+            <button type="button" class="btn-remove-leader">-</button>
+        `;
+
+        const highTierInput = row.querySelector('.p-hightier-input') as HTMLInputElement;
+        const currTierInput = row.querySelector('.p-currtier-input') as HTMLInputElement;
+        Renderer.attachTierAutocomplete(highTierInput);
+        Renderer.attachTierAutocomplete(currTierInput);
+        Renderer.populatePositionOptions(row.querySelector('.p-mainpos-select') as HTMLSelectElement);
+        Renderer.populatePositionOptions(row.querySelector('.p-subpos-select') as HTMLSelectElement);
+
+        row.querySelector('.btn-remove-leader')?.addEventListener('click', () => {
+            // 티어 드롭다운은 document.body로 포탈되어 있어 행 삭제만으로는 함께 제거되지 않으므로 먼저 정리
+            Renderer.detachTierAutocomplete(highTierInput);
+            Renderer.detachTierAutocomplete(currTierInput);
+            row.remove();
+        });
+
+        return row;
+    };
+
+    // 표를 초기 빈 행 상태로 되돌림 (모달 최초 진입 시 / 일괄 등록 성공 후 다음 사용을 위해)
+    const resetPlayerRows = () => {
+        // innerHTML 초기화만으로는 document.body로 포탈된 드롭다운이 정리되지 않으므로 먼저 각 행의 것을 해제
+        addPlayerRowsContainer.querySelectorAll('.p-hightier-input, .p-currtier-input').forEach((input) => {
+            Renderer.detachTierAutocomplete(input as HTMLInputElement);
+        });
+        addPlayerRowsContainer.innerHTML = '';
+        for (let i = 0; i < INITIAL_PLAYER_ROWS; i++) {
+            addPlayerRowsContainer.appendChild(createPlayerRow());
+        }
+    };
+    resetPlayerRows();
+
+    document.getElementById('btn-add-player-row')?.addEventListener('click', () => {
+        addPlayerRowsContainer.appendChild(createPlayerRow());
+    });
 
     document.getElementById('btn-open-add-player')?.addEventListener('click', () => {
         if (addPlayerModal) addPlayerModal.style.display = 'flex';
@@ -446,49 +508,40 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('btn-submit-add-player')?.addEventListener('click', async () => {
-        const name = (document.getElementById('add-p-name') as HTMLInputElement).value.trim();
-        const nick = (document.getElementById('add-p-nick') as HTMLInputElement).value.trim();
-        const highTier = (document.getElementById('add-p-high-tier') as HTMLInputElement).value.trim();
-        const currTier = (document.getElementById('add-p-curr-tier') as HTMLInputElement).value.trim();
-        const mainPos = (document.getElementById('add-p-main-pos') as HTMLInputElement).value.trim();
-        const subPos = (document.getElementById('add-p-sub-pos') as HTMLInputElement).value.trim();
-        const mostStr = (document.getElementById('add-p-most') as HTMLInputElement).value.trim();
-
-        if (!name || !nick || !highTier || !currTier || !mainPos) {
-            return alert("필수 항목(*표시)을 입력해주세요.");
-        }
-
-        const most = mostStr.split(',').map(s => s.trim()).filter(Boolean);
-
         if (!latestData || !currentRoomId) return;
 
-        // 새로운 고유 ID 생성 (p_현재시간_랜덤)
-        const newId = `p_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-        const newPlayer = {
-            id: newId,
-            name,
-            nickname: nick,
-            highTier,
-            currentTier: currTier,
-            mainPos,
-            subPos,
-            most,
-            status: 'waiting'
-        };
+        // DOM에서 각 행의 원시 입력값만 읽어오고, 검증/변환은 순수 함수(buildPlayersFromRows)에 위임
+        const rowInputs: PlayerRowInput[] = Array.from(addPlayerRowsContainer.querySelectorAll('.player-row')).map((row) => ({
+            name: (row.querySelector('.p-name-input') as HTMLInputElement).value.trim(),
+            nickname: (row.querySelector('.p-nick-input') as HTMLInputElement).value.trim(),
+            highTier: (row.querySelector('.p-hightier-input') as HTMLInputElement).value.trim(),
+            currentTier: (row.querySelector('.p-currtier-input') as HTMLInputElement).value.trim(),
+            mainPos: (row.querySelector('.p-mainpos-select') as HTMLSelectElement).value.trim(),
+            subPos: (row.querySelector('.p-subpos-select') as HTMLSelectElement).value.trim(),
+            mostStr: (row.querySelector('.p-most-input') as HTMLInputElement).value.trim(),
+        }));
+
+        const { players: newPlayers, errors } = buildPlayersFromRows(rowInputs, Date.now());
+
+        if (errors.length > 0) {
+            return alert(errors.join('\n'));
+        }
+        if (Object.keys(newPlayers).length === 0) {
+            return alert('등록할 참가자 정보를 입력해주세요.');
+        }
 
         try {
-            // 새 선수 추가 및 playerOrder 갱신
-            const currentPlayers = latestData.players || {};
-            currentPlayers[newId] = newPlayer;
+            // 기존 선수 목록 + 새로 등록할 선수들을 한 번에 반영
+            const currentPlayers = { ...(latestData.players || {}), ...newPlayers };
             await RoomService.registerPlayers(currentRoomId, currentPlayers);
 
-            // 모달 닫기 및 입력칸 초기화
+            // 모달 닫기 및 표 초기화
             if (addPlayerModal) addPlayerModal.style.display = 'none';
-            document.querySelectorAll('#add-player-modal input').forEach(input => (input as HTMLInputElement).value = '');
-            alert("참가자가 추가되었습니다.");
+            resetPlayerRows();
+            alert(`참가자 ${Object.keys(newPlayers).length}명이 추가되었습니다.`);
         } catch (error) {
             console.error(error);
-            alert("참가자 추가에 실패했습니다.");
+            alert('참가자 추가에 실패했습니다.');
         }
     });
 
@@ -536,13 +589,19 @@ window.addEventListener('DOMContentLoaded', () => {
         if (!playerId) return;
 
         const p = latestData.players[playerId];
+        // idle = 경매 시작 전(방금 생성) 또는 모든 팀 정원이 차서 완전히 종료된 이후 두 경우 모두 해당.
+        // "참가자 수동 등록" 버튼(admin-add-player-zone)이 노출 여부를 판단할 때 쓰는 것과 동일한 기준을 재사용.
         const isStarted = latestData.live.status !== 'idle';
 
         const modal = document.getElementById('player-info-modal');
         const name = document.getElementById('player-modal-name');
         const detail = document.getElementById('player-modal-detail');
+        const adminZone = document.getElementById('player-modal-admin-zone');
+        const adminNotice = document.getElementById('player-modal-admin-notice');
+        const editBtn = document.getElementById('btn-open-edit-player') as HTMLButtonElement | null;
 
         if (modal && name && detail) {
+            currentInfoPlayerId = playerId;
             name.innerText = `${p.name} (${p.nickname})`;
 
             let statusText = '';
@@ -570,25 +629,37 @@ window.addEventListener('DOMContentLoaded', () => {
                 statusColor = '#888';
             }
 
-            let infoHtml = `
+            // 역할/경매 진행 상태와 무관하게 모든 필드를 항상 동일하게 표시 (정보를 가리는 처리 없음)
+            const highTierColor = Renderer.getTierColor(p.highTier);
+            const currentTierColor = Renderer.getTierColor(p.currentTier);
+            const infoHtml = `
                 <div style="margin-bottom:15px; text-align:center; font-size:16px; font-weight:bold; color:${statusColor}; border:1px solid ${statusColor}; padding:8px; border-radius:4px;">
                     ${statusText}
                 </div>
-                <div style="margin-bottom:10px;"><strong>최고 티어:</strong> ${escapeHtml(p.highTier)}</div>
-                <div style="margin-bottom:10px;"><strong>현재 티어:</strong> ${escapeHtml(p.currentTier)}</div>
+                <div style="margin-bottom:10px;"><strong>최고 티어:</strong> <span style="color:${highTierColor};">${escapeHtml(p.highTier)}</span></div>
+                <div style="margin-bottom:10px;"><strong>현재 티어:</strong> <span style="color:${currentTierColor};">${escapeHtml(p.currentTier)}</span></div>
                 <div style="margin-bottom:10px;"><strong>주 포지션:</strong> ${escapeHtml(p.mainPos)}</div>
+                <div style="margin-bottom:10px;"><strong>부 포지션:</strong> ${escapeHtml(p.subPos)}</div>
+                <div><strong>Most:</strong> ${p.most && p.most.length > 0 ? p.most.map(escapeHtml).join(', ') : '-'}</div>
             `;
+            detail.innerHTML = infoHtml;
 
-            if (isStarted) {
-                infoHtml += `
-                    <div style="margin-bottom:10px;"><strong>부 포지션:</strong> ${escapeHtml(p.subPos)}</div>
-                    <div><strong>Most:</strong> ${p.most.map(escapeHtml).join(', ')}</div>
-                `;
-            } else {
-                infoHtml += `<div style="color:#888; margin-top:20px; text-align:center;">🔒 경매가 시작되면 상세 정보가 공개됩니다.</div>`;
+            // 방장 전용 정보 수정 영역: 경매 시작 전에만 버튼 노출, 시작 후에는 잠금 안내로 전환
+            if (adminZone && adminNotice && editBtn) {
+                if (userRole === 'team_1') {
+                    adminZone.style.display = 'block';
+                    if (!isStarted) {
+                        adminNotice.textContent = '경매 시작 전에는 정보를 수정할 수 있습니다.';
+                        editBtn.style.display = 'inline-block';
+                    } else {
+                        adminNotice.textContent = '🔒 경매가 시작되면 정보를 수정할 수 없습니다.';
+                        editBtn.style.display = 'none';
+                    }
+                } else {
+                    adminZone.style.display = 'none';
+                }
             }
 
-            detail.innerHTML = infoHtml;
             modal.style.display = 'flex';
         }
     });
@@ -599,6 +670,89 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('btn-close-player-modal')?.addEventListener('click', () => {
         document.getElementById('player-info-modal')!.style.display = 'none';
+    });
+
+    // --- [참가자 정보 수정 모달] ---
+    // 필드 구성/검증은 참가자 등록(단건·일괄)과 동일한 buildPlayersFromRows를 재사용한다.
+    const editPlayerModal = document.getElementById('edit-player-modal');
+    const editNameInput = document.getElementById('edit-p-name') as HTMLInputElement;
+    const editNickInput = document.getElementById('edit-p-nick') as HTMLInputElement;
+    const editHighTierInput = document.getElementById('edit-p-high-tier') as HTMLInputElement;
+    const editCurrTierInput = document.getElementById('edit-p-curr-tier') as HTMLInputElement;
+    const editMainPosSelect = document.getElementById('edit-p-main-pos') as HTMLSelectElement;
+    const editSubPosSelect = document.getElementById('edit-p-sub-pos') as HTMLSelectElement;
+    const editMostInput = document.getElementById('edit-p-most') as HTMLInputElement;
+
+    // 이 모달의 티어 입력/포지션 select는 정적 요소이므로(행이 동적으로 생기지 않음) 최초 한 번만 연결
+    Renderer.attachTierAutocomplete(editHighTierInput);
+    Renderer.attachTierAutocomplete(editCurrTierInput);
+    Renderer.populatePositionOptions(editMainPosSelect);
+    Renderer.populatePositionOptions(editSubPosSelect);
+
+    document.getElementById('btn-open-edit-player')?.addEventListener('click', () => {
+        if (!currentInfoPlayerId || !latestData) return;
+        const p = latestData.players[currentInfoPlayerId];
+        if (!p) return;
+
+        editNameInput.value = p.name || '';
+        editNickInput.value = p.nickname || '';
+        editHighTierInput.value = p.highTier || '';
+        editCurrTierInput.value = p.currentTier || '';
+        editMainPosSelect.value = p.mainPos || '';
+        editSubPosSelect.value = p.subPos || '';
+        editMostInput.value = (p.most || []).join(', ');
+
+        document.getElementById('player-info-modal')!.style.display = 'none';
+        if (editPlayerModal) editPlayerModal.style.display = 'flex';
+    });
+
+    document.getElementById('btn-close-edit-player')?.addEventListener('click', () => {
+        if (editPlayerModal) editPlayerModal.style.display = 'none';
+    });
+
+    document.getElementById('btn-submit-edit-player')?.addEventListener('click', async () => {
+        if (!currentRoomId || !currentInfoPlayerId) return;
+
+        const rowInput: PlayerRowInput = {
+            name: editNameInput.value.trim(),
+            nickname: editNickInput.value.trim(),
+            highTier: editHighTierInput.value.trim(),
+            currentTier: editCurrTierInput.value.trim(),
+            mainPos: editMainPosSelect.value.trim(),
+            subPos: editSubPosSelect.value.trim(),
+            mostStr: editMostInput.value.trim(),
+        };
+
+        const { players: built, errors } = buildPlayersFromRows([rowInput], Date.now());
+
+        if (errors.length > 0) {
+            // buildPlayersFromRows의 에러 메시지는 "N번째 행: ..." 형식이라 수정 폼(단일 항목)에는 행 번호가 불필요
+            return alert(errors[0].replace(/^\d+번째 행: /, ''));
+        }
+        if (Object.keys(built).length === 0) {
+            return alert('필수 항목(*표시)을 입력해주세요.');
+        }
+
+        const updatedFields = Object.values(built)[0];
+
+        try {
+            // status 등 다른 필드는 건드리지 않고 수정한 필드만 targeted update
+            await RoomService.updatePlayer(currentRoomId, currentInfoPlayerId, {
+                name: updatedFields.name,
+                nickname: updatedFields.nickname,
+                highTier: updatedFields.highTier,
+                currentTier: updatedFields.currentTier,
+                mainPos: updatedFields.mainPos,
+                subPos: updatedFields.subPos,
+                most: updatedFields.most,
+            });
+
+            if (editPlayerModal) editPlayerModal.style.display = 'none';
+            alert('참가자 정보가 수정되었습니다.');
+        } catch (error) {
+            console.error(error);
+            alert('참가자 정보 수정에 실패했습니다.');
+        }
     });
 
     // 약관 모달
