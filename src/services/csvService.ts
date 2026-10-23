@@ -15,15 +15,16 @@ export const CSVService = {
                         if (row.length < 5) return; // 최소한 주포지션까지는 있어야 함
                         const id = `p_${i}`;
                         players[id] = {
-                            id, 
-                            name: row[0]?.trim(), 
-                            nickname: row[1]?.trim(), 
+                            id,
+                            name: row[0]?.trim(),
+                            nickname: row[1]?.trim(),
                             highTier: row[2]?.trim(),
                             currentTier: row[3]?.trim(),
-                            mainPos: row[4]?.trim(), 
+                            mainPos: row[4]?.trim(),
                             subPos: row[5]?.trim(),
                             most: [row[6], row[7], row[8]].filter(v => v && v.trim() !== ''),
-                            status: 'waiting'
+                            status: 'waiting',
+                            regOrder: i // 좌측 PLAYERS 목록 정렬용 (CSV 행 순서 그대로, 추첨 순서와 무관)
                         };
                     });
                     resolve(players);

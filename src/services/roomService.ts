@@ -3,6 +3,11 @@ import { db } from "../firebase";
 import { TimerUtils } from "../utils/timer";
 import type { Player } from "../types";
 
+// 방장이 '경매 시작'을 누른 뒤 "곧 경매가 시작합니다" 준비 화면이 떠 있는 시간(최초 1회뿐).
+// 입찰 제한 시간(15000ms, auctionService.ts)이나 선수 간 전환 대기(5000ms, finalize())와는
+// 완전히 별개의 상수이므로 여기만 바꿔도 다른 타이머에 영향이 없다.
+const AUCTION_START_COUNTDOWN_MS = 10000;
+
 export const RoomService = {
     // 1. 메인 화면에서 '링크 생성' 클릭 시 호출
     async createRoom(roomId: string, teams: any, initialPoints: number) {
@@ -12,6 +17,8 @@ export const RoomService = {
             live: {
                 status: 'idle',
                 activePlayerId: null,
+                previousPlayerId: null,
+                nextPlayerId: null,
                 highestBid: 0,
                 highestBidderId: null,
                 initialPoints,
@@ -26,8 +33,8 @@ export const RoomService = {
     async registerPlayers(roomId: string, players: Record<string, Player>) {
         // players 경로를 통째로 덮어쓰기 (set 사용)
         await set(ref(db, `rooms/${roomId}/players`), players);
-        // playerOrder 초기화 (set 사용)
-        await set(ref(db, `rooms/${roomId}/live/playerOrder`), []);
+        // 경매 시작 전에만 호출되므로 추첨 이력/다음 경매자 예약을 모두 초기화
+        await update(ref(db, `rooms/${roomId}/live`), { playerOrder: [], nextPlayerId: null });
     },
 
     // 2-1. 참가자 정보 수정 (상세 모달의 "정보 수정") - 해당 선수 한 명의 필드만 targeted update.
@@ -60,8 +67,10 @@ export const RoomService = {
             return alert(`다음 팀장들이 아직 접속하지 않았습니다:\n${offlineLeaders.join(', ')}\n\n모든 팀장이 접속해야 경매를 시작할 수 있습니다.`);
         }
 
+        // 선수 추첨 순서는 더 이상 시작 시점에 전체 셔플하지 않는다.
+        // nextPlayer()가 매번 "현재가 끝날 때 다음 1명"만 균등 랜덤으로 뽑아 live.nextPlayerId에 저장한다
+        // (src/utils/auctionDraw.ts 참고). playerOrder는 경매에 실제로 오른 순서의 append-only 이력으로 쓰인다.
         await update(ref(db, `rooms/${roomId}/live`), {
-            playerOrder: TimerUtils.shuffle(playerIds), // 선수 랜덤 순서
             leaderOrder: TimerUtils.shuffle(leaderIds), // 팀장 입찰 순서
             status: 'idle'
         });
@@ -73,7 +82,7 @@ export const RoomService = {
     async triggerNextAuction(roomId: string) {
         await update(ref(db, `rooms/${roomId}/live`), {
             status: 'cooldown',
-            nextAuctionTime: Date.now() + 15000 // 최초 시작 대기 시간 15초로 변경
+            nextAuctionTime: Date.now() + AUCTION_START_COUNTDOWN_MS
         });
     },
 

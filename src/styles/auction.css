@@ -494,13 +494,57 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     margin-bottom: 5px;
 }
 
-.player-info-area {
-    padding: clamp(8px, 2.5vw, 15px);
+/* 현재 경매자(가운데) + 직전/다음 경매자(양옆, 작고 흐리게) 3분할 레이아웃.
+   grid-template-areas로 배치해서, 좁은 화면에서는 current를 위로 올리고 prev/next를
+   그 아래 한 줄로 내리는 재배치를 DOM 순서 변경 없이 처리한다. */
+.stage-row {
+    display: grid;
+    grid-template-columns: minmax(70px, 150px) 1fr minmax(70px, 150px);
+    grid-template-areas: "prev current next";
+    align-items: stretch;
+    gap: 8px;
     border-bottom: 1px solid #333;
+    flex: 0 0 auto;
+}
+
+.player-info-area {
+    grid-area: current;
+    padding: clamp(8px, 2.5vw, 15px);
     text-align: center;
-    flex: 0 0 auto; /* 크기 고정 (내용물만큼) */
     overflow-wrap: anywhere; /* 긴 닉네임이 넘치지 않도록 */
 }
+
+.stage-side-card {
+    grid-area: prev;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 6px 4px;
+    opacity: 0.55; /* 가운데(현재 카드)로 시선이 가도록 흐리게 */
+    font-size: 0.85em;
+    overflow-wrap: anywhere;
+}
+#stage-next.stage-side-card { grid-area: next; }
+
+.stage-side-empty {
+    color: #555;
+    font-size: 0.85em;
+}
+
+.stage-side-name { color: #ddd; font-weight: bold; }
+.stage-side-nick { color: #777; font-weight: normal; font-size: 0.9em; }
+.stage-side-meta { color: #999; margin-top: 2px; }
+.stage-side-badge {
+    margin-top: 4px;
+    font-size: 0.85em;
+    padding: 1px 6px;
+    border-radius: 10px;
+    display: inline-block;
+}
+.stage-side-badge.sold { background: rgba(200, 170, 110, 0.15); color: #c8aa6e; }
+.stage-side-badge.passed { background: rgba(255, 70, 85, 0.15); color: #ff4655; }
 
 .card-bottom-area {
     flex: 1; /* 남은 공간 차지 */
@@ -684,6 +728,19 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
 .player-card.bidding { border-left-color: #00bcff; background: #2a3e4a; }
 .player-card.sold { border-left-color: #c8aa6e; opacity: 0.6; }
 .player-card.passed { border-left-color: #ff4655; opacity: 0.6; }
+
+.player-status-badge {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: #2a2e33;
+    color: #aaa;
+}
+.player-status-badge.bidding { background: rgba(0, 188, 255, 0.15); color: #00bcff; }
+.player-status-badge.sold { background: rgba(200, 170, 110, 0.15); color: #c8aa6e; }
+.player-status-badge.passed { background: rgba(255, 70, 85, 0.15); color: #ff4655; }
 
 .team-card {
     background: #0d1117;
@@ -1069,6 +1126,19 @@ button { cursor: pointer; border: 1px solid #c8aa6e; font-weight: bold; transiti
     .auction-card {
         max-width: 100%;
         flex: none; /* height:auto 컨텍스트에서는 내용만큼 */
+    }
+
+    /* 가운데(현재 경매자)를 위로, 직전/다음 경매자는 그 아래 작은 한 줄로 */
+    .stage-row {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+            "current current"
+            "prev    next";
+    }
+
+    .stage-side-card {
+        padding: 6px;
+        font-size: 0.8em;
     }
 
     .card-bottom-area {

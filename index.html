@@ -297,9 +297,13 @@
 
       <!-- 3. 통합 카드 (선수 정보 + 로그 + 입찰 패널) -->
       <div class="auction-card">
-        <!-- 선수 정보 -->
-        <div id="player-info-area" class="player-info-area">
-            <!-- Renderer.renderPlayerInfo() -->
+        <!-- 선수 정보: 가운데(현재 경매자)를 중심으로 좌(직전)/우(다음)에 작은 카드를 둔다 -->
+        <div class="stage-row">
+            <div id="stage-prev" class="stage-side-card"></div>
+            <div id="player-info-area" class="player-info-area">
+                <!-- Renderer.renderPlayerInfo() -->
+            </div>
+            <div id="stage-next" class="stage-side-card"></div>
         </div>
 
         <!-- 하단 영역: 로그 + 입찰 패널 -->
@@ -334,6 +338,9 @@
                      <button id="btn-pause" class="btn-secondary btn-small" style="background:#555;">⏸ 퍼즈 요청</button>
                      <button id="btn-resume-auction" class="btn-primary btn-small" style="display:none; background: #238636; border-color: #2ea043;">▶ 퍼즈 해제</button>
                   </div>
+
+                  <!-- 모든 팀 구성 완료 시 방장에게만 표시 (main.ts의 allTeamsFull 분기 참고) -->
+                  <button id="btn-download-result" class="btn-primary" style="display:none; margin-top: 10px; background:#238636; border-color:#2ea043; width: 100%;">📥 결과 다운로드</button>
                 </div>
 
                 <!-- 방장 전용: CSV 업로드 및 시작 -->
