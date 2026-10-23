@@ -68,7 +68,7 @@ export const LATEST_PATCH_VERSION = 'v2.1.0';
 
 export const UPDATE_LOG = `
 <h3>🚀 패치노트</h3>
-<ul class="update-list">
+<ul class="update-list">    
     <li>
         <span class="version">v2.1.0</span> <span class="date">2026.08.21</span>
         <p>- 참가자 상세 정보 모달에 방장 전용 '참가자 정보 수정' 기능 추가</p>

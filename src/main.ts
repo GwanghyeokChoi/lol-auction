@@ -237,7 +237,7 @@ window.addEventListener('DOMContentLoaded', () => {
             latestData = data; // 최신 데이터 저장
 
             // Renderer 호출
-            Renderer.renderPlayerList(data.players || {}, data.live.playerOrder || [], userRole, data.live.status);
+            Renderer.renderPlayerList(data.players || {}, data.teams || {}, userRole, data.live.status);
             Renderer.renderStage(data.live, data.players || {}, data.teams || {});
             Renderer.renderTeams(data.teams || {}, userRole);
             Renderer.renderStats(data.players || {});
@@ -537,7 +537,10 @@ window.addEventListener('DOMContentLoaded', () => {
             mostStr: (row.querySelector('.p-most-input') as HTMLInputElement).value.trim(),
         }));
 
-        const { players: newPlayers, errors } = buildPlayersFromRows(rowInputs, Date.now());
+        // regOrder가 기존 참가자와 겹치지 않도록(삭제로 인한 구멍이 있어도 안전하게) 현재 최대값 + 1부터 부여
+        const existingRegOrders = Object.values(latestData.players || {}).map((p: any) => p.regOrder ?? -1);
+        const regOrderStart = existingRegOrders.length > 0 ? Math.max(...existingRegOrders) + 1 : 0;
+        const { players: newPlayers, errors } = buildPlayersFromRows(rowInputs, Date.now(), regOrderStart);
 
         if (errors.length > 0) {
             return alert(errors.join('\n'));

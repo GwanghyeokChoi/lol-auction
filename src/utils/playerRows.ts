@@ -27,10 +27,16 @@ const isRowEmpty = (row: PlayerRowInput): boolean =>
  *
  * idPrefix로 호출 시점(Date.now())을 주입받아, 같은 밀리초 내 여러 행이 처리돼도
  * 행 인덱스가 섞여 id가 충돌하지 않게 한다.
+ *
+ * regOrderStart: 좌측 PLAYERS 목록 정렬용 regOrder의 시작값. 실제로 Player 객체가 만들어지는
+ * 행에만 순서대로 부여한다(빈 행/에러 행은 건너뛰어도 번호를 소비하지 않음). 기존 참가자와
+ * 겹치지 않도록 호출자가 "현재 최대 regOrder + 1"을 넘겨준다(단건 수정처럼 번호가 안 쓰이는
+ * 호출은 기본값 0을 그대로 둬도 무방).
  */
-export function buildPlayersFromRows(rows: PlayerRowInput[], idPrefix: number): BuildPlayersResult {
+export function buildPlayersFromRows(rows: PlayerRowInput[], idPrefix: number, regOrderStart = 0): BuildPlayersResult {
     const players: Record<string, Player> = {};
     const errors: string[] = [];
+    let regOrder = regOrderStart;
 
     rows.forEach((row, idx) => {
         if (isRowEmpty(row)) return;
@@ -59,6 +65,7 @@ export function buildPlayersFromRows(rows: PlayerRowInput[], idPrefix: number): 
             subPos: row.subPos,
             most,
             status: 'waiting',
+            regOrder: regOrder++,
         };
     });
 

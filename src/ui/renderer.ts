@@ -209,43 +209,75 @@ export const Renderer = {
         return getTierColor(tier);
     },
 
-    // 1. 좌측 플레이어 리스트 (경매 순서)
-    renderPlayerList(players: Record<string, Player>, order: string[], userRole: string, auctionStatus: string) {
+    // 1. 좌측 플레이어 리스트
+    // 추첨 순서(live.playerOrder/nextPlayerId)와 무관하게 항상 같은 행 위치를 유지해야 하므로
+    // 등록 순번(regOrder)으로만 정렬한다 — 목록 순서가 다음 추첨 결과의 힌트가 되면 안 되기 때문.
+    // 구버전 방 등 regOrder가 없는 선수는 맨 뒤로 보내고 id 문자열 비교로 안정적인 순서를 만든다(최소 폴백).
+    renderPlayerList(players: Record<string, Player>, teams: Record<string, Team>, userRole: string, auctionStatus: string) {
         const el = document.getElementById('player-list');
         if (!el) return;
 
-        // order 배열에 없는 새로 추가된 선수들을 맨 뒤에 추가
-        const addedPlayerIds = Object.keys(players).filter(id => !order.includes(id));
-        const allPlayerIds = [...order, ...addedPlayerIds];
+        // 낙찰된 선수 -> 팀 리더명 역참조 맵 (낙찰 배지 표시용)
+        const soldTeamByPlayerId: Record<string, string> = {};
+        Object.values(teams).forEach((t) => {
+            (t.members || []).forEach((pid) => { soldTeamByPlayerId[pid] = t.leaderName; });
+        });
 
-        const listHtml = allPlayerIds.map(id => {
-            const p = players[id];
-            if (!p) return '';
+        const sortedPlayers = Object.values(players).sort((a, b) => {
+            const ao = a.regOrder ?? Number.MAX_SAFE_INTEGER;
+            const bo = b.regOrder ?? Number.MAX_SAFE_INTEGER;
+            if (ao !== bo) return ao - bo;
+            return a.id.localeCompare(b.id);
+        });
+
+        const listHtml = sortedPlayers.map(p => {
             const tierColor = getTierColor(p.currentTier);
-            
+
             // 방장이고 경매 시작 전일 때만 삭제 버튼 표시
             let deleteBtn = '';
             if (userRole === 'team_1' && auctionStatus === 'idle') {
                 deleteBtn = `<button class="btn-delete-player" data-id="${p.id}" style="
-                    background: transparent; border: none; color: #ff4655; font-size: 16px; 
+                    background: transparent; border: none; color: #ff4655; font-size: 16px;
                     cursor: pointer; padding: 0 5px; float: right;">×</button>`;
+            }
+
+            let statusBadge = '';
+            if (p.status === 'sold') {
+                statusBadge = `<small class="player-status-badge sold">${escapeHtml(soldTeamByPlayerId[p.id] || '')} 낙찰 ${p.soldPrice || 0}P</small>`;
+            } else if (p.status === 'passed') {
+                statusBadge = `<small class="player-status-badge passed">유찰</small>`;
+            } else if (p.status === 'bidding') {
+                statusBadge = `<small class="player-status-badge bidding">진행중</small>`;
+            } else {
+                // 다음 경매자라도 목록에서는 일반 "대기"로만 표시한다(중앙 카드에서 이미 노출).
+                statusBadge = `<small class="player-status-badge waiting">대기</small>`;
             }
 
             return `<div class="player-card ${p.status}" data-id="${p.id}">
                 ${deleteBtn}
                 <strong>${escapeHtml(p.name)}</strong> <small style="color:${tierColor}">${escapeHtml(p.currentTier)}</small> <small>(${escapeHtml(p.mainPos)})</small>
+                <div>${statusBadge}</div>
             </div>`;
         }).join('');
 
-        el.innerHTML = `<div class="panel-header">PLAYERS (경매 순서)</div><div class="scroll-area">${listHtml}</div>`;
+        el.innerHTML = `<div class="panel-header">PLAYERS</div><div class="scroll-area">${listHtml}</div>`;
     },
 
     // 2. 중앙 상세 정보 및 상태 메시지
     renderStage(live: AuctionState, players: Record<string, Player>, teams: Record<string, Team>) {
         const statusEl = document.getElementById('auction-status-message');
         const infoEl = document.getElementById('player-info-area');
-        
+
         if (!statusEl || !infoEl) return;
+
+        // 양옆(직전/다음) 카드는 "현재 경매 중인 사람" 전체 정보 카드가 보일 때만 의미가 있으므로,
+        // 아래에서 그 카드를 그리는 분기에서만 채우고 그 외(종료/쿨타임/선수 없음)에는 비워둔다.
+        const clearSideCards = () => {
+            const prevEl = document.getElementById('stage-prev');
+            const nextEl = document.getElementById('stage-next');
+            if (prevEl) prevEl.innerHTML = '';
+            if (nextEl) nextEl.innerHTML = '';
+        };
 
         // 경매 종료 여부 확인
         const allTeamsFull = Object.values(teams).every((t: any) => (t.members?.length || 0) >= 4);
@@ -285,6 +317,7 @@ export const Renderer = {
                     </p>
                 </div>
             `;
+            clearSideCards();
             return;
         }
 
@@ -309,11 +342,13 @@ export const Renderer = {
                     <p style="font-size: 18px; color: #888;">${resultSub}</p>
                 </div>
             `;
+            clearSideCards();
             return;
         }
 
         if (!live.activePlayerId || !players[live.activePlayerId]) {
             infoEl.innerHTML = `<div style="padding: 50px; color: #888;">대기 중인 선수가 없습니다.</div>`;
+            clearSideCards();
             return;
         }
 
@@ -334,6 +369,49 @@ export const Renderer = {
                 <div><strong>부 포지션:</strong> ${escapeHtml(p.subPos)}</div>
                 <div class="full"><strong>Most:</strong> ${p.most ? p.most.map(escapeHtml).join(', ') : '-'}</div>
             </div>
+        `;
+
+        // 양옆: 직전/다음 경매자 (현재 카드보다 작고 흐리게 — 시선은 가운데로)
+        this.renderStageSideCard('stage-prev', live.previousPlayerId ?? null, players, teams, { role: 'prev' });
+        this.renderStageSideCard('stage-next', live.nextPlayerId ?? null, players, teams, { role: 'next' });
+    },
+
+    // 중앙 스테이지 좌/우의 작은 카드 (직전/다음 경매자). 새 Firebase 읽기 없이 이미 구독 중인
+    // live/players/teams만으로 계산한다.
+    renderStageSideCard(
+        containerId: string,
+        playerId: string | null,
+        players: Record<string, Player>,
+        teams: Record<string, Team>,
+        opts: { role: 'prev' | 'next' }
+    ) {
+        const el = document.getElementById(containerId);
+        if (!el) return;
+
+        if (!playerId || !players[playerId]) {
+            // 첫 경매자일 때(직전 없음) vs 마지막 경매자일 때(다음 없음)를 구분해서 표시
+            const emptyLabel = opts.role === 'next' ? '마지막 경매자' : '';
+            el.innerHTML = `<div class="stage-side-empty">${escapeHtml(emptyLabel)}</div>`;
+            return;
+        }
+
+        const p = players[playerId];
+        const tierColor = getTierColor(p.currentTier);
+
+        let resultBadge = '';
+        if (opts.role === 'prev') {
+            if (p.status === 'sold') {
+                const winnerTeam = Object.values(teams).find((t) => (t.members || []).includes(playerId));
+                resultBadge = `<div class="stage-side-badge sold">${escapeHtml(winnerTeam?.leaderName || '')}팀 낙찰 ${p.soldPrice || 0}P</div>`;
+            } else if (p.status === 'passed') {
+                resultBadge = `<div class="stage-side-badge passed">유찰</div>`;
+            }
+        }
+
+        el.innerHTML = `
+            <div class="stage-side-name">${escapeHtml(p.name)} <span class="stage-side-nick">(${escapeHtml(p.nickname)})</span></div>
+            <div class="stage-side-meta"><span style="color:${tierColor}">${escapeHtml(p.currentTier)}</span> · ${escapeHtml(p.mainPos)}</div>
+            ${resultBadge}
         `;
     },
 
