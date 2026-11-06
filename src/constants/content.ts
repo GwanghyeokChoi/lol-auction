@@ -68,7 +68,16 @@ export const LATEST_PATCH_VERSION = 'v2.1.0';
 
 export const UPDATE_LOG = `
 <h3>🚀 패치노트</h3>
-<ul class="update-list">    
+<ul class="update-list"> 
+    <li>
+        <span class="version">v2.2.0</span> <span class="date">2026.11.06</span>
+        <p>- 경매 순서를 미리 정하지 않고, 매 경매마다 남은 인원 중에서 랜덤으로 추첨하도록 변경</p>
+        <p>- 중앙 경매자 카드 좌우에 이전 경매자(낙찰/유찰 결과 포함)와 다음 경매자를 표시</p>
+        <p>- 좌측 참가자 목록을 경매 순서와 무관하게 고정된 순서로 표시하고, 각자의 현재 상태(대기/낙찰/유찰)를 노출</p>
+        <p>- 유찰 인원은 모든 경매가 끝난 뒤 처음 경매에 나왔던 순서 그대로 재경매</p>
+        <p>- 경매 시작 전 준비 시간을 15초에서 10초로 단축</p>
+        <p>- 경매 종료 후 방장에게 '결과 다운로드' 버튼이 보이지 않던 문제 수정</p>
+    </li>
     <li>
         <span class="version">v2.1.0</span> <span class="date">2026.08.21</span>
         <p>- 참가자 상세 정보 모달에 방장 전용 '참가자 정보 수정' 기능 추가</p>
